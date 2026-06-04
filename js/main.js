@@ -24,6 +24,23 @@
     ctx.fillRect(0, 0, BC.W, BC.H);
   }
 
+  // day -> golden hour -> dusk -> night as the clock runs from 5 PM to 2 AM
+  const SKY = [
+    [0, 255, 220, 170, 0.05], [100, 255, 200, 150, 0.08], [180, 235, 150, 120, 0.18],
+    [260, 120, 95, 150, 0.30], [340, 45, 48, 98, 0.42], [540, 26, 30, 74, 0.46]
+  ];
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function timeTint() {
+    if (!BC.game || !BC.game.run) return;
+    if (BC.sceneName !== 'overworld' && BC.sceneName !== 'home') return;
+    const m = BC.game.run.minutes;
+    let a = SKY[0], b = SKY[SKY.length - 1];
+    for (let i = 0; i < SKY.length - 1; i++) { if (m >= SKY[i][0] && m <= SKY[i + 1][0]) { a = SKY[i]; b = SKY[i + 1]; break; } }
+    const t = (b[0] === a[0]) ? 0 : (m - a[0]) / (b[0] - a[0]);
+    ctx.fillStyle = 'rgba(' + (lerp(a[1], b[1], t) | 0) + ',' + (lerp(a[2], b[2], t) | 0) + ',' + (lerp(a[3], b[3], t) | 0) + ',' + lerp(a[4], b[4], t).toFixed(3) + ')';
+    ctx.fillRect(0, 0, BC.W, BC.H);
+  }
+
   BC.setScene = function (name, args) {
     if (BC.scene && BC.scene.exit) BC.scene.exit();
     if (BC.ui && BC.ui.sceneCleanup) BC.ui.sceneCleanup();
@@ -82,6 +99,7 @@
         else BC.scene.render(ctx);
       }
     }
+    timeTint();
     drunkTint();
     if (BC.game) BC.game.tick(dt);
     if (BC.ui) BC.ui.render(ctx);

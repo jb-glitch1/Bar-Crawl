@@ -19,42 +19,73 @@
     return (h >>> 0);
   }
 
+  // distinct building facades, picked per ~quadrant so each building reads differently
+  const FACADES = [
+    { wall: '#a85a4a', trim: '#7a4636', win: '#cfe6f0' }, // brick red
+    { wall: '#c6ac7a', trim: '#9c8255', win: '#eef2e2' }, // tan stucco
+    { wall: '#6f82a4', trim: '#54627e', win: '#e2ecf4' }, // blue-gray
+    { wall: '#7f9070', trim: '#5f6e52', win: '#eef2df' }, // sage
+    { wall: '#9070a0', trim: '#6e5470', win: '#f2e6f2' }  // mauve
+  ];
+
+  // 0 = daytime, 1 = full night — drives window lights and the sky tint
+  function nightFactor() {
+    const g = BC.game;
+    if (!g || !g.run) return 0;
+    return Math.max(0, Math.min(1, (g.run.minutes - 150) / 150));
+  }
+
   function drawTile(ctx, type, x, y, tx, ty) {
     const h = hash(tx, ty);
     switch (type) {
       case T.GRASS:
-        gfx(ctx, x, y, '#3f7a44');
-        if (h % 5 === 0) gfx(ctx, x + (h % 12), y + (h % 10), '#357040', 2, 1);
-        if (h % 7 === 0) gfx(ctx, x + (h % 9) + 2, y + (h % 8) + 3, '#4a8a4e', 1, 1);
-        break;
-      case T.ROAD:
-        gfx(ctx, x, y, '#34343d');
-        if (h % 3 === 0) gfx(ctx, x + (h % 13), y + (h % 12), '#2c2c34', 2, 1);
-        break;
-      case T.SIDEWALK:
-        gfx(ctx, x, y, '#8b8b95');
-        gfx(ctx, x, y, '#7c7c86', 16, 1);
-        gfx(ctx, x, y, '#7c7c86', 1, 16);
-        break;
-      case T.BUILDING:
-        gfx(ctx, x, y, '#574a6b');
-        gfx(ctx, x, y, '#473b58', 16, 2);
-        // windows
-        if ((tx + ty) % 2 === 0) {
-          const lit = (h % 4 === 0);
-          gfx(ctx, x + 3, y + 4, lit ? '#e7cd84' : '#2a2438', 4, 5);
-          gfx(ctx, x + 9, y + 4, (h % 3 === 0) ? '#e7cd84' : '#2a2438', 4, 5);
+        gfx(ctx, x, y, '#5aa45f');
+        if (h % 4 === 0) gfx(ctx, x + (h % 12), y + (h % 10), '#4d9152', 2, 1);
+        if (h % 6 === 0) gfx(ctx, x + (h % 9) + 2, y + (h % 8) + 3, '#6fbf6f', 1, 1);
+        if (h % 11 === 0) { // little flowers
+          const fc = ['#f2d24a', '#f06a8a', '#ffffff'][h % 3];
+          gfx(ctx, x + 3 + (h % 8), y + 3 + (h % 7), fc, 2, 2);
         }
         break;
+      case T.ROAD:
+        gfx(ctx, x, y, '#56565f');
+        if (h % 3 === 0) gfx(ctx, x + (h % 13), y + (h % 12), '#4a4a52', 2, 1);
+        if (h % 6 === 0) gfx(ctx, x + (h % 10), y + (h % 10), '#3e3e46', 3, 1);
+        if ((tx + ty) % 4 === 0) gfx(ctx, x + 6, y + 7, '#c9b34a', 4, 2); // lane dash
+        break;
+      case T.SIDEWALK:
+        gfx(ctx, x, y, '#bdb9b0');
+        gfx(ctx, x, y, '#a9a59c', 16, 1);
+        gfx(ctx, x, y, '#a9a59c', 1, 16);
+        if (h % 9 === 0) gfx(ctx, x + 4, y + 5, '#9a968d', 8, 6);   // grate
+        if (h % 13 === 0) gfx(ctx, x + (h % 9) + 2, y + (h % 9) + 2, '#a8a49b', 2, 2);
+        break;
+      case T.BUILDING: {
+        const f = FACADES[hash(Math.floor(tx / 7), Math.floor(ty / 5)) % FACADES.length];
+        gfx(ctx, x, y, f.wall);
+        gfx(ctx, x, y, f.trim, 16, 2);
+        gfx(ctx, x, y + 14, 'rgba(0,0,0,0.16)', 16, 2);
+        if ((tx + ty) % 2 === 0) {
+          const nf = nightFactor();
+          [3, 9].forEach(wx => {
+            const lit = ((hash(tx * 5 + wx, ty * 5) >> 2) % 100) < (10 + 72 * nf);
+            gfx(ctx, x + wx, y + 4, lit ? '#ffe27a' : f.win, 4, 5);
+            gfx(ctx, x + wx, y + 3, 'rgba(20,16,28,0.6)', 4, 1);
+          });
+        }
+        break;
+      }
       case T.TREE:
-        gfx(ctx, x, y, '#3f7a44');
-        gfx(ctx, x + 7, y + 9, '#6b4a2a', 2, 6);
-        gfx(ctx, x + 3, y + 1, '#2f6b39', 10, 9);
-        gfx(ctx, x + 5, y + 2, '#3c8048', 6, 5);
+        gfx(ctx, x, y, '#5aa45f');
+        gfx(ctx, x + 7, y + 9, '#7a5630', 2, 6);
+        gfx(ctx, x + 3, y + 1, '#2f8a44', 10, 9);
+        gfx(ctx, x + 5, y + 2, '#46a85a', 6, 5);
+        gfx(ctx, x + 6, y + 3, '#6fc97a', 3, 3);
         break;
       case T.WATER:
-        gfx(ctx, x, y, '#2a6aa0');
-        if (h % 4 === 0) gfx(ctx, x + (h % 11), y + (h % 12), '#3f86c0', 3, 1);
+        gfx(ctx, x, y, '#2f86c0');
+        if (h % 4 === 0) gfx(ctx, x + (h % 11), y + (h % 12), '#5aa6e0', 3, 1);
+        if (h % 6 === 0) gfx(ctx, x + (h % 9), y + (h % 10), '#2a72a8', 2, 1);
         break;
       case T.WALL:
         gfx(ctx, x, y, '#4a4a5a');
@@ -69,9 +100,10 @@
         gfx(ctx, x + 2, y + 2, '#9a3f52', 12, 12);
         break;
       case T.DOOR:
-        gfx(ctx, x, y, '#3a2f3a');
-        gfx(ctx, x + 3, y + 1, '#caa15a', 10, 15);
-        gfx(ctx, x + 10, y + 8, '#5a4020', 1, 2);
+        gfx(ctx, x, y, '#4a3a2a');
+        gfx(ctx, x + 2, y + 1, '#8a5a30', 12, 15);
+        gfx(ctx, x + 2, y + 1, '#9a6a3a', 12, 2);
+        gfx(ctx, x + 10, y + 8, '#e8d27a', 1, 2);
         break;
       case T.COUNTER:
         gfx(ctx, x, y, '#7a5a3a');
