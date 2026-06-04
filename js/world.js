@@ -210,8 +210,16 @@
       const r = bldRect(b.quad);
       for (let yy = r.y; yy < r.y + r.h; yy++) for (let xx = r.x; xx < r.x + r.w; xx++) g[yy][xx] = 'B';
       g[r.dy][r.dx] = 'D';
-      if (r.dir === 'down') { for (let yy = r.dy + 1; yy <= 6; yy++) g[yy][r.dx] = 'p'; }
-      else { for (let yy = 9; yy < r.dy; yy++) g[yy][r.dx] = 'p'; }
+      // L-shaped path from the door to the central path so nothing is orphaned
+      if (r.dir === 'down') {
+        for (let yy = r.dy + 1; yy <= 6; yy++) g[yy][r.dx] = 'p';      // down to the row-6 connector
+        const lo = Math.min(r.dx, 7), hi = Math.max(r.dx, 8);
+        for (let xx = lo; xx <= hi; xx++) if (g[6][xx] !== 'B') g[6][xx] = 'p'; // across to center
+      } else {
+        for (let yy = 9; yy < r.dy; yy++) g[yy][r.dx] = 'p';
+        const lo = Math.min(r.dx, 7), hi = Math.max(r.dx, 8);
+        for (let xx = lo; xx <= hi; xx++) if (g[9][xx] !== 'B') g[9][xx] = 'p';
+      }
       builds.push(Object.assign({ id: b.id }, r));
     });
     (opts.water || []).forEach(([x, y]) => { if (g[y][x] === 'g') g[y][x] = '~'; });
@@ -234,6 +242,23 @@
         else BC.ui.toast('"That one\'s not free either, pal."');
       }
     });
+  }
+
+  // Lassie side-gag: Scout leads you to the old well; you fish out a guy for cash.
+  function wellRescue(g) {
+    if (g.run.flags.well_done) {
+      BC.ui.say(['The old well is quiet now.', 'Somewhere nearby, a very good dog is extremely proud of herself.'], { speaker: 'The Well' });
+      return;
+    }
+    g.run.flags.well_done = true;
+    g.run.cash += 15;
+    BC.ui.say([
+      'You peer into the old well.',
+      'A man waves up: "Oh thank GOD. I fell in during happy hour."',
+      'He scrambles out, presses $15 into your hand, and bolts toward the nearest bar.',
+      '"Good girl, Scout. ...wait, whose dog IS this?"  (+$15)'
+    ], { speaker: '???' });
+    BC.audio && BC.audio.sfx('stamp');
   }
 
   function speakeasyGate(g, ret) {
@@ -283,12 +308,15 @@
     addScooter(S['1,0'], 6, 11);
     makeScreen(S, '2,0', 'The Strip', { exits: X(0, 1, 1, 0), buildings: [{ quad: 'TL', id: 'off_key_west' }, { quad: 'TR', id: 'pour_decisions' }] });
 
-    makeScreen(S, '0,1', 'Riverside Park', { exits: X(1, 1, 0, 1), park: true, water: [[10, 10], [11, 10], [12, 10], [10, 11], [11, 11], [12, 11], [11, 12]], trees: [[2, 2], [4, 2], [13, 2], [2, 11], [13, 12]], actors: [
+    makeScreen(S, '0,1', 'Riverside Park', { exits: X(1, 1, 0, 1), park: true, water: [[10, 10], [11, 10], [12, 10], [10, 11], [11, 11], [12, 11], [11, 12]], trees: [[1, 2], [13, 2], [2, 11], [13, 12]], actors: [
       { x: 64, y: 40, type: 'person', colors: { shirt: '#3a9d5a' }, name: 'Jogger', lines: ['On your left! ...Sorry. Force of habit.'] },
       { x: 120, y: 200, type: 'dog', colors: { body: '#5a5a5a' }, name: 'Rex' },
-      { x: 200, y: 56, type: 'dog', colors: { body: '#e0c89a', dark: '#b89a6a' }, name: 'Daisy' }
+      { x: 200, y: 56, type: 'dog', colors: { body: '#e0c89a', dark: '#b89a6a' }, name: 'Daisy' },
+      { x: 110, y: 150, type: 'dog', colors: { body: '#caa05a', dark: '#9a7838' }, name: 'Scout', leadTo: { x: 56, y: 72 }, lines: ['*Scout barks furiously and bolts toward the old well!*', '"What is it, girl?? ...Did somebody fall in??"'] }
     ] });
     addBike(S['0,1'], 4, 11);
+    S['0,1'].meta.props.push({ tx: 3, ty: 4, type: 'well' });
+    S['0,1'].meta.interactions['3,4'] = wellRescue;
     makeScreen(S, '1,1', 'Old Town', { exits: X(1, 1, 1, 1), buildings: [{ quad: 'TL', id: 'sticky_floor' }, { quad: 'TR', id: 'cellar_door' }] });
     makeScreen(S, '2,1', 'Backstreets', { exits: X(1, 1, 1, 0), buildings: [{ quad: 'TL', id: 'witz_end' }, { quad: 'TR', id: 'reggies' }] });
 

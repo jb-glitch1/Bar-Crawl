@@ -153,6 +153,8 @@
       BC.ui.toast('You pet ' + (a.name || 'the dog') + '. Good dog!', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
+      if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
+      if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
     } else {
       BC.ui.say(a.lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
     }
@@ -201,6 +203,16 @@
         BC.rect(ctx, x + 1, y + 16, 14, 2, 'rgba(0,0,0,0.3)'); // ground pad
         BC.gfx.scooter(ctx, x, y - 1, 'right');                // a parked rental scooter
         BC.gfx.px(ctx, x + 13, y, 1, 4, '#7ad0ff');           // app beacon
+      } else if (pr.type === 'well') {
+        BC.rect(ctx, x + 1, y + 17, 14, 2, 'rgba(0,0,0,0.25)');   // ground shadow
+        BC.rect(ctx, x + 2, y + 8, 12, 8, '#8a8a92');             // stone base
+        BC.rect(ctx, x + 2, y + 8, 12, 2, '#a4a4ac');
+        BC.rect(ctx, x + 4, y + 10, 8, 5, '#15151c');             // dark opening
+        BC.rect(ctx, x + 3, y - 2, 2, 11, '#6b4a2a');             // posts
+        BC.rect(ctx, x + 11, y - 2, 2, 11, '#6b4a2a');
+        BC.rect(ctx, x, y - 6, 16, 5, '#7a3030');                 // roof
+        BC.rect(ctx, x, y - 6, 16, 1, '#9a4444');
+        BC.rect(ctx, x + 6, y + 1, 4, 3, '#5a3a20');              // bucket
       } else if (pr.type === 'bike') {
         if (BC.game.hasItem('bike')) {
           BC.rect(ctx, x + 2, y + 10, 12, 2, '#556'); // empty rack
@@ -338,15 +350,22 @@
     }
     for (const a of (scr.meta.actors || [])) {
       a.t -= dt;
-      if (a.t <= 0) {
+      const far = Math.hypot(a.x - a.hx, a.y - a.hy) > 40;
+      if (far) {
+        // head toward home / lead target
+        const ang = Math.atan2(a.hy - a.y, a.hx - a.x);
+        a.mvx = Math.cos(ang); a.mvy = Math.sin(ang);
+        a.dir = Math.abs(a.mvx) > Math.abs(a.mvy) ? (a.mvx > 0 ? 'right' : 'left') : (a.mvy > 0 ? 'down' : 'up');
+        a.t = 0.4;
+      } else if (a.t <= 0) {
         a.t = 0.8 + Math.random() * 2.2;
         if (Math.random() < 0.4) { a.mvx = 0; a.mvy = 0; }
         else { const D = [[1, 0, 'right'], [-1, 0, 'left'], [0, 1, 'down'], [0, -1, 'up']][(Math.random() * 4) | 0]; a.mvx = D[0]; a.mvy = D[1]; a.dir = D[2]; }
       }
       const sp = a.type === 'dog' ? 24 : 15;
       const nx = a.x + a.mvx * sp * dt, ny = a.y + a.mvy * sp * dt;
-      if (Math.hypot(nx - a.hx, ny - a.hy) < 36 && !BC.solidBox(scr, { x: nx - 4, y: ny - 4, w: 8, h: 6 })) { a.x = nx; a.y = ny; }
-      else { a.mvx = 0; a.mvy = 0; }
+      if (nx > 8 && nx < BC.W - 8 && ny > 20 && ny < BC.H - 6 && !BC.solidBox(scr, { x: nx - 4, y: ny - 4, w: 8, h: 6 })) { a.x = nx; a.y = ny; }
+      else { a.mvx = 0; a.mvy = 0; if (far) a.t = 0.6; }
       if (a.mvx || a.mvy) { a.anim += dt * 6; a.frame = (a.anim | 0) & 1; } else a.frame = 0;
     }
   }
