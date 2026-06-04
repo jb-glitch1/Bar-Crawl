@@ -37,7 +37,7 @@
         this.darts.push({ x: r.x, y: r.y, pts });
         BC.audio && BC.audio.sfx(pts >= 30 ? 'stamp' : pts > 0 ? 'confirm' : 'cancel');
         this.throws--;
-        if (this.throws <= 0) { this.phase = 'done'; this.pass = this.score >= 55; }
+        if (this.throws <= 0) { this.phase = 'done'; this.pass = this.score >= 70; }
       }
     },
     secretActive() { return BC.game.tipsyTier() >= 1; },
@@ -47,7 +47,7 @@
       const ay = 34 * (1 + BC.game.tipsyTier() * 0.18);
       return { x: CX + Math.sin(this.t * 2.3 * k) * ax, y: CY + Math.sin(this.t * 3.1 * k + 1.2) * ay };
     },
-    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok); },
+    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok, this.score); },
     render(ctx) {
       BC.rect(ctx, 0, 0, BC.W, BC.H, '#161214');
       BC.text(ctx, 'DARTS', BC.W / 2, 8, { color: '#ffe27a', size: 11, align: 'center' });
@@ -74,7 +74,7 @@
       BC.text(ctx, 'Score ' + this.score + '   Darts ' + this.throws, BC.W / 2, 168, { color: '#cfe', size: 9, align: 'center' });
       if (this.phase === 'done') {
         BC.text(ctx, this.pass ? 'SHARP SHOOTER!' : 'NICE TRY', BC.W / 2, 186, { color: this.pass ? '#7ed07e' : '#ff8a8a', size: 13, align: 'center' });
-        BC.text(ctx, 'need 55  -  Z to continue', BC.W / 2, 206, { color: '#9ab', size: 8, align: 'center' });
+        BC.text(ctx, 'need 70  -  Z to continue', BC.W / 2, 206, { color: '#9ab', size: 8, align: 'center' });
       } else {
         BC.text(ctx, 'Z = throw    X = quit', BC.W / 2, 206, { color: '#778', size: 8, align: 'center' });
         if (!this.secretActive()) BC.text(ctx, '(sober eyes... something\'s hidden)', BC.W / 2, 222, { color: '#556', size: 7, align: 'center' });

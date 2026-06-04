@@ -13,14 +13,15 @@
   BC.startChallenge = (type, id) => BC.ui.cutscene([
     { fadeOut: 1, dur: 0.2 }, { do: () => BC.setScene('mg_' + type, { barId: id }) }, { fadeIn: 0, dur: 0.2 }
   ]);
-  BC.afterMinigame = (barId, success) => {
+  BC.afterMinigame = (barId, success, score) => {
     const g = BC.game, def = BC.bars[barId];
+    if (score != null) {
+      const isPB = g.setHighScore(barId, score);
+      if (isPB && g.hasStamp(barId)) BC.ui.toast('New high score: ' + score + '!', { good: true });
+    }
     if (success) {
       g.earnStamp(barId);
       if (def && def.onStamp) def.onStamp(g);
-      // a celebratory drink for clearing the challenge (this is how you get tipsy)
-      const dd = (def && def.drinkOnWin != null) ? def.drinkOnWin : 14;
-      if (dd > 0) g.drink(dd);
     }
     if (g.run.ended) return; // a blackout (or 2 AM) just took over the night
     BC.ui.cutscene([
@@ -115,19 +116,27 @@
     },
 
     talkChallenge(n) {
-      const g = BC.game;
-      if (g.hasStamp(this.id)) {
+      const g = BC.game, id = this.id, type = n.challenge, bar = BC.bars[id];
+      const noBooze = bar.drinkOnWin === 0;
+      const drink = bar.drink || { name: 'a drink', amount: 12 };
+      if (g.hasStamp(id)) {
         BC.ui.say(n.repeat || ['Good to see you again.'], { speaker: n.name }, () => {
-          if ((BC.bars[this.id].drinkOnWin) === 0) return; // diner etc. don't push booze
-          BC.ui.choose('Order another round?', ['Sure - one more (+tipsy)', 'Nah, pacing myself'], (i) => {
-            if (i === 0) { g.drink(12); BC.ui.toast('*clink* another one down'); }
+          const opts = ['Play again  (best: ' + g.highScore(id) + ')'];
+          if (!noBooze) opts.push('Order ' + drink.name + ' (+tipsy)');
+          opts.push('Leave it');
+          BC.ui.choose("What'll it be?", opts, (i) => {
+            if (i === 0) BC.startChallenge(type, id);
+            else if (!noBooze && i === 1) { g.drink(12); BC.ui.toast('*clink* another ' + drink.name + '.'); }
           });
         });
       } else {
-        const id = this.id, type = n.challenge;
+        // ordering a drink is part of taking on the bar
         BC.ui.say(n.greet || ['Ready?'], { speaker: n.name }, () => {
-          BC.ui.choose('Give it a shot?', ['Yes, let\'s go', 'Maybe later'], (i) => {
-            if (i === 0) BC.startChallenge(type, id);
+          const prompt = noBooze ? 'Take it on?' : 'Order ' + drink.name + ' and take it on?';
+          BC.ui.choose(prompt, [noBooze ? "Let's go" : 'Order & play', 'Maybe later'], (i) => {
+            if (i !== 0) return;
+            if (!noBooze) { g.drink(drink.amount); BC.ui.toast('You order ' + drink.name + '.'); if (g.run.ended) return; }
+            BC.startChallenge(type, id);
           });
         });
       }

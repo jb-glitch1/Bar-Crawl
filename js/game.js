@@ -4,10 +4,10 @@
   const U = BC.util;
 
   BC.config = {
-    debug: false,           // dev hotkeys
-    timeScale: 0.42,        // in-game minutes per real second (~21 min full night)
-    nightMinutes: 540,      // 5:00 PM -> 2:00 AM
-    tipsyDecayPerSec: 0.6,  // sober up slowly when not drinking
+    debug: false,                 // dev hotkeys
+    timeScale: 0.16,              // in-game minutes per real second (~56 min full night)
+    nightMinutes: 540,            // 5:00 PM -> 2:00 AM
+    tipsyDecayPerGameMin: 0.18,   // sober up slowly over the night (scales with game-time)
     blackoutAt: 100
   };
 
@@ -34,6 +34,7 @@
       loops: 0,
       wins: 0,
       bestStamps: 0,
+      highscores: {},  // per-bar best scores (persist across loops)
       seenIntro: false
     };
   }
@@ -78,9 +79,10 @@
     // ---- time ----
     tick(dt) {
       if (this.paused || !this.run || this.run.ended) return;
-      this.run.minutes += dt * this.config.timeScale;
+      const gmin = dt * this.config.timeScale;
+      this.run.minutes += gmin;
       if (this.run.tipsy > 0) {
-        this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerSec * dt);
+        this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerGameMin * gmin);
       }
       if (this.run.energized > 0) this.run.energized -= dt;
       this._updateMood();
@@ -175,6 +177,12 @@
       if (n > this.meta.bestStamps) { this.meta.bestStamps = n; this.save(); }
       BC.ui && BC.ui.toast('* STAMP EARNED: ' + this.stampName(id) + ' *', { good: true });
       BC.audio && BC.audio.sfx('stamp');
+    },
+    highScore(id) { return this.meta.highscores[id] || 0; },
+    setHighScore(id, score) {
+      if (score == null) return false;
+      if (score > (this.meta.highscores[id] || 0)) { this.meta.highscores[id] = score; this.save(); return true; }
+      return false;
     },
     hasStamp(id) { return !!this.run.stamps[id]; },
     stampCount() { return this.activeCard().filter(id => this.run.stamps[id]).length; },

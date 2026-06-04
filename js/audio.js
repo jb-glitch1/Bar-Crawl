@@ -6,14 +6,15 @@
   let ctx = null, master = null, filter = null, started = false, muted = false;
   let timer = null, nextTime = 0, step = 0, tipsy = 0;
 
-  // mood / theme parameters
+  // mood / theme parameters — warm, bouncy, whimsical (Animal-Crossing-ish)
   const MOODS = {
-    early: { tempo: 0.26, wave: 'triangle', root: 196.0, scale: [0, 2, 4, 7, 9], bassEvery: 4, gain: 0.15 },
-    mid:   { tempo: 0.205, wave: 'square',   root: 174.6, scale: [0, 2, 3, 5, 7, 10], bassEvery: 4, gain: 0.15 },
-    late:  { tempo: 0.30, wave: 'sawtooth', root: 130.8, scale: [0, 2, 4, 6, 8, 10], bassEvery: 8, gain: 0.14 }
+    early: { tempo: 0.23, wave: 'triangle', root: 261.6, scale: [0, 2, 4, 7, 9, 12], bassEvery: 4, gain: 0.17 },
+    mid:   { tempo: 0.205, wave: 'triangle', root: 220.0, scale: [0, 2, 4, 5, 7, 9, 11], bassEvery: 4, gain: 0.16 },
+    late:  { tempo: 0.26, wave: 'triangle', root: 196.0, scale: [0, 2, 4, 6, 7, 9, 11], bassEvery: 8, gain: 0.15 }
   };
   let cur = MOODS.early;
-  const MEL = [0, 2, 4, 2, 5, 4, 7, 4, 2, 0, 3, 5, 4, 2, 1, 4];
+  // a longer, springier phrase that reaches up an octave for that playful lilt
+  const MEL = [0, 2, 4, 7, 4, 2, 5, 4, 0, 2, 4, 9, 7, 4, 2, 0, 4, 5, 7, 9, 7, 5, 4, 2];
 
   function makeCtx() {
     const AC = window.AudioContext || window.webkitAudioContext;

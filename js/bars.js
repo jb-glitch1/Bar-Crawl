@@ -201,8 +201,19 @@
     sobering_thoughts: [f('booth', 1, 8), f('booth', 12, 8), f('tv', 6, 1), f('stool', 4, 6), f('stool', 11, 6)],
     speakeasy: [f('booth', 1, 9), f('shelf', 14, 1), f('jukebox', 1, 6), f('table', 11, 9), f('rug', 6, 6)]
   };
+  const DRINKS = {
+    tipsy_newt: { name: 'a pint of cider', amount: 14 },
+    hail_mary: { name: 'a tall lager', amount: 14 },
+    off_key_west: { name: 'a mai tai', amount: 16 },
+    pour_decisions: { name: 'a bold red', amount: 15 },
+    sticky_floor: { name: 'a well whiskey', amount: 18 },
+    cellar_door: { name: 'a rare cask ale', amount: 16 },
+    witz_end: { name: 'a stiff martini', amount: 17 },
+    speakeasy: { name: 'a secret cocktail', amount: 17 }
+  };
   Object.keys(BC.bars).forEach(id => {
     if (PAL[id]) BC.bars[id].palette = PAL[id];
     if (FURN[id]) BC.bars[id].furniture = FURN[id];
+    if (DRINKS[id]) BC.bars[id].drink = DRINKS[id];
   });
 })();

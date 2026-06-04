@@ -18,7 +18,7 @@
   S.mg_trivia = {
     enter(args) {
       this.barId = args.barId; this.done = false;
-      this.qs = shuffle(POOL).slice(0, 4);
+      this.qs = shuffle(POOL).slice(0, 5);
       this.i = 0; this.sel = 0; this.right = 0;
       this.flash = 0; this.flashOk = false;
     },
@@ -28,7 +28,7 @@
         this.flash -= dt;
         if (this.flash <= 0) {
           this.i++; this.sel = 0;
-          if (this.i >= this.qs.length) { this.phase = 'done'; this.pass = this.right >= 3; }
+          if (this.i >= this.qs.length) { this.phase = 'done'; this.pass = this.right >= 4; }
         }
         return;
       }
@@ -43,18 +43,18 @@
         this.flash = 0.7;
       }
     },
-    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok); },
+    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok, this.right); },
     render(ctx) {
       BC.rect(ctx, 0, 0, BC.W, BC.H, '#101826');
       BC.text(ctx, 'TUESDAY TRIVIA', BC.W / 2, 12, { color: '#ffe27a', size: 11, align: 'center' });
       if (this.phase === 'done') {
         BC.text(ctx, this.pass ? 'TRIVIA CHAMP!' : 'BUZZER...', BC.W / 2, 90, { color: this.pass ? '#7ed07e' : '#ff8a8a', size: 14, align: 'center' });
-        BC.text(ctx, 'Score: ' + this.right + ' / 4', BC.W / 2, 116, { color: '#cfe', size: 10, align: 'center' });
+        BC.text(ctx, 'Score: ' + this.right + ' / ' + this.qs.length, BC.W / 2, 116, { color: '#cfe', size: 10, align: 'center' });
         BC.text(ctx, 'Z to continue', BC.W / 2, BC.H - 24, { color: '#889', size: 8, align: 'center' });
         return;
       }
       const q = this.qs[this.i];
-      BC.text(ctx, 'Q' + (this.i + 1) + '/4   (' + this.right + ' right)', BC.W / 2, 30, { color: '#9ab', size: 8, align: 'center' });
+      BC.text(ctx, 'Q' + (this.i + 1) + '/' + this.qs.length + '   (' + this.right + ' right)', BC.W / 2, 30, { color: '#9ab', size: 8, align: 'center' });
       // wrap question
       const words = q.q.split(' '); let line = '', y = 50;
       for (const w of words) { if ((line + ' ' + w).length > 34) { BC.text(ctx, line, BC.W / 2, y, { color: '#fff', size: 9, align: 'center' }); y += 13; line = w; } else line = line ? line + ' ' + w : w; }

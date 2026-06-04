@@ -38,14 +38,14 @@
           if (r.options[this.sel] === r.correct) { this.right++; BC.audio && BC.audio.sfx('confirm'); }
           else BC.audio && BC.audio.sfx('cancel');
           this.idx++; this.sel = 0;
-          if (this.idx >= this.regs.length) { this.phase = 'done'; this.pass = this.right >= 2; }
+          if (this.idx >= this.regs.length) { this.phase = 'done'; this.pass = this.right >= 3; }
         }
       } else if (this.phase === 'done') {
         if (BC.input.pressed('a')) this.finish(this.pass);
       }
     },
 
-    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok); },
+    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok, this.right); },
 
     render(ctx) {
       BC.rect(ctx, 0, 0, BC.W, BC.H, '#16121c');

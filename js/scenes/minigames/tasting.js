@@ -133,7 +133,7 @@
     finish(ok) {
       if (this.done) return;
       this.done = true;
-      BC.afterMinigame(this.barId, ok);
+      BC.afterMinigame(this.barId, ok, this.right);
     },
 
     render(ctx) {

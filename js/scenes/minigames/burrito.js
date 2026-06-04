@@ -133,7 +133,7 @@
     _finish(ok) {
       if (this.done) return;
       this.done = true;
-      BC.afterMinigame(this.barId, ok);
+      BC.afterMinigame(this.barId, ok, Math.round(this.progress + this.timer * 2));
     },
 
     render(ctx) {

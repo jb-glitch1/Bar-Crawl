@@ -193,7 +193,7 @@
       this.phase = 'player';
     },
 
-    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok); },
+    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok, Math.max(0, this.dignity | 0)); },
 
     render(ctx) {
       BC.rect(ctx, 0, 0, BC.W, BC.H, '#0e0d1a');

@@ -15,7 +15,7 @@
       this.t = 0; this.notes = []; this.spawnIdx = 0; this.hits = 0; this.misses = 0;
       this.schedule = [];
       let tt = 1.0;
-      for (let i = 0; i < 18; i++) { this.schedule.push({ t: tt, lane: (Math.random() * 4) | 0 }); tt += (0.55 + Math.random() * 0.25); }
+      for (let i = 0; i < 24; i++) { this.schedule.push({ t: tt, lane: (Math.random() * 4) | 0 }); tt += (0.5 + Math.random() * 0.22); }
       this.total = this.schedule.length;
       this.phase = 'play'; this.flash = [0, 0, 0, 0];
     },
@@ -45,10 +45,10 @@
         }
       }
       if (this.spawnIdx >= this.schedule.length && !this.notes.some(n => n.alive)) {
-        this.phase = 'done'; this.pass = (this.hits / this.total) >= 0.6;
+        this.phase = 'done'; this.pass = (this.hits / this.total) >= 0.68;
       }
     },
-    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok); },
+    finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok, this.hits); },
     render(ctx) {
       BC.rect(ctx, 0, 0, BC.W, BC.H, '#0e1420');
       BC.text(ctx, 'OFF-KEY WEST', BC.W / 2, 10, { color: '#ffe27a', size: 11, align: 'center' });
