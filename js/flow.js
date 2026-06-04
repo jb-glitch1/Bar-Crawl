@@ -52,7 +52,7 @@
 
       if (won) {
         steps.push({ do: () => { g.meta.wins++; g.save(); } });
-        steps.push({ text: ['You did it. The whole card — punched — before close.', 'Somewhere a bartender you\'ll never meet is quietly proud.'] });
+        steps.push({ text: ['The last stamp lands. The whole card — punched.', '...and then 2 AM comes. And keeps going.', 'For the first time, the night does not reset.'] });
         steps.push({ do: () => BC.setScene('win') });
         steps.push({ fadeIn: 0, dur: 0.8 });
       } else {

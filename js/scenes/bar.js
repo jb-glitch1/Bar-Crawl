@@ -199,7 +199,7 @@
       BC.ui.say(['*the bartender studies you*', '"...You again. The 5-PM-to-2-AM one. The looper."', '"This is loop number ' + g.meta.loops + ' for you. Give or take."'], { speaker: n.name }, () => {
         BC.ui.choose('"Quick — do you remember how this night ends?"', ['"...No idea."', '"Every single time."', '"Wait — you KNOW?"'], () => {
           g.earnStamp('deja_brew');
-          BC.ui.say(['*slides you a stamp without being asked*', '"Knew you\'d pick that. See you next loop."'], { speaker: n.name });
+          BC.ui.say(['*slides you a stamp without being asked*', '"Wanna stop looping? Punch every card. The night you FINISH is the one that lets you wake up tomorrow."', '"...or keep comin\' back. I don\'t mind the company."'], { speaker: n.name });
         });
       });
     },
