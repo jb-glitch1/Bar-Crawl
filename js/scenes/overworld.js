@@ -35,6 +35,7 @@
           screenKey = trans.toKey;
           screen = BC.world.screens[screenKey];
           player.x = trans.px; player.y = trans.py;
+          placeSafe(screen, player);
           trans = null;
         }
         return;
@@ -52,12 +53,26 @@
       // interact with whatever is in front of you
       if (BC.input.pressed('a')) interactFront();
 
+      // hop on / off the bike (once you own one)
+      if (BC.input.pressed('b') && g.hasItem('bike')) {
+        const onBike = g.run.vehicle === 'bike';
+        g.setVehicle(onBike ? 'walk' : 'bike');
+        BC.ui.toast(onBike ? 'Off the bike.' : 'On your bike.');
+      }
+
       // dev hotkeys
       if (BC.config.debug) {
         if (BC.input.pressed('one')) g.drink(14);
         if (BC.input.pressed('two')) g.eat(25);
         if (BC.input.pressed('three')) cycleVehicle();
         if (BC.input.pressed('four')) g.run.minutes = Math.min(g.config.nightMinutes, g.run.minutes + 30);
+      }
+
+      // step onto a bar door = walk straight in
+      const ctx2 = Math.floor(player.x / 16), cty2 = Math.floor(player.y / 16);
+      if (screen.tiles[cty2 * screen.w + ctx2] === BC.world.T.DOOR) {
+        const inter = screen.meta.interactions && screen.meta.interactions[ctx2 + ',' + cty2];
+        if (inter) { inter(g); return; }
       }
 
       const W = BC.W, H = BC.H;
@@ -81,7 +96,9 @@
         BC.gfx.actor(ctx, trans.px - 8 + tx, trans.py - 16 + ty, player.dir, 0, player.colors);
       } else {
         BC.world.draw(ctx, screen, 0, 0);
+        drawProps(ctx, screen, 0, 0);
         BC.gfx.actor(ctx, player.x - 8, player.y - 16, player.dir, player.frame, player.colors);
+        drawSigns(ctx, screen, 0, 0);
       }
       // location label
       const label = trans ? BC.world.screens[trans.toKey].name : screen.name;
@@ -130,7 +147,59 @@
     }
   }
 
-  BC.overworld = { interactFront, frontTile };
+  function placeSafe(scr, p) {
+    if (!BC.solidBox(scr, p.box())) return;
+    for (let r = 1; r <= 7; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          const tx = Math.floor(p.x / 16) + dx, ty = Math.floor(p.y / 16) + dy;
+          if (tx < 0 || ty < 0 || tx >= scr.w || ty >= scr.h) continue;
+          const cx = tx * 16 + 8, cy = ty * 16 + 12;
+          if (!BC.solidBox(scr, p.box(cx, cy))) { p.x = cx; p.y = cy; return; }
+        }
+      }
+    }
+  }
+
+  function drawProps(ctx, scr, ox, oy) {
+    const props = scr.meta && scr.meta.props;
+    if (!props) return;
+    for (const pr of props) {
+      const x = ox + pr.tx * 16, y = oy + pr.ty * 16;
+      if (pr.type === 'scooter') {
+        BC.rect(ctx, x + 6, y + 2, 4, 13, '#445'); // post
+        BC.rect(ctx, x + 2, y - 4, 12, 7, '#1c2740'); // sign
+        BC.text(ctx, 'SCOOT', x + 3, y - 3, { color: '#7ad0ff', size: 6, shadow: false });
+        BC.rect(ctx, x + 1, y + 13, 14, 2, '#222');
+      } else if (pr.type === 'bike') {
+        if (BC.game.hasItem('bike')) {
+          BC.rect(ctx, x + 2, y + 10, 12, 2, '#556'); // empty rack
+          BC.rect(ctx, x + 3, y + 6, 2, 5, '#556');
+          BC.rect(ctx, x + 11, y + 6, 2, 5, '#556');
+        } else {
+          BC.gfx.px(ctx, x + 2, y + 11, 4, 4, '#222'); // wheels
+          BC.gfx.px(ctx, x + 10, y + 11, 4, 4, '#222');
+          BC.gfx.px(ctx, x + 3, y + 12, 2, 2, '#777');
+          BC.gfx.px(ctx, x + 11, y + 12, 2, 2, '#777');
+          BC.rect(ctx, x + 4, y + 8, 8, 2, '#c43'); // frame
+          BC.rect(ctx, x + 7, y + 5, 2, 4, '#c43');
+        }
+      }
+    }
+  }
+
+  function drawSigns(ctx, scr, ox, oy) {
+    const signs = scr.meta && scr.meta.signs;
+    if (!signs) return;
+    for (const s of signs) {
+      const cx = ox + s.tx * 16 + 8, ty = oy + (s.ty - 1) * 16 + 4;
+      const w = s.text.length * 4 + 6;
+      BC.rect(ctx, cx - w / 2, ty, w, 9, 'rgba(10,10,20,0.85)');
+      BC.text(ctx, s.text, cx, ty + 1, { color: '#ffe27a', size: 7, align: 'center', shadow: false });
+    }
+  }
+
+  BC.overworld = { interactFront, frontTile, placeSafe };
 
   function startFlip(dir, dx, dy, px, py) {
     const nk = neighbor(dx, dy);

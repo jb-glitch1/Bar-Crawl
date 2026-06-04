@@ -9,6 +9,7 @@
 
   BC.setScene = function (name, args) {
     if (BC.scene && BC.scene.exit) BC.scene.exit();
+    if (BC.ui && BC.ui.sceneCleanup) BC.ui.sceneCleanup();
     BC.scene = BC.scenes[name];
     BC.sceneName = name;
     if (!BC.scene) { console.error('No scene: ' + name); return; }

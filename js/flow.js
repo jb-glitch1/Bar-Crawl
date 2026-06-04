@@ -51,6 +51,7 @@
         steps.push({ do: () => { g.meta.wins++; g.save(); } });
         steps.push({ text: ['You did it. The whole card — punched — before close.', 'Somewhere a bartender you\'ll never meet is quietly proud.'] });
         steps.push({ do: () => BC.setScene('win') });
+        steps.push({ fadeIn: 0, dur: 0.8 });
       } else {
         steps.push({ text: [U.choice(LOOP)] });
         steps.push({ do: () => { g.newRun(); BC.setScene('overworld', { key: BC.world.startKey }); } });

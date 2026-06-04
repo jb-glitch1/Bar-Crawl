@@ -9,9 +9,9 @@
   const SOLID = new Set([T.WALL, T.BUILDING, T.TREE, T.WATER, T.COUNTER]);
 
   const LEGEND = {
-    '#': T.WALL, '.': T.FLOOR, ',': T.RUG, 'D': T.DOOR, 'd': T.DOOR,
+    '#': T.WALL, '.': T.FLOOR, ',': T.RUG, 'D': T.DOOR, 'd': T.DOOR, 'X': T.DOOR,
     'B': T.BUILDING, 'S': T.SIDEWALK, 'R': T.ROAD, 'g': T.GRASS,
-    'T': T.TREE, '~': T.WATER, 'C': T.COUNTER, '@': T.SIDEWALK
+    'T': T.TREE, '~': T.WATER, 'C': T.COUNTER, '@': T.FLOOR
   };
 
   function hash(tx, ty) {
@@ -93,22 +93,119 @@
     const w = 16, h = 15;
     const tiles = new Uint8Array(w * h);
     const doors = [];
-    let spawn = null;
+    let spawn = null, exitDoor = null;
     for (let ty = 0; ty < h; ty++) {
       const row = rows[ty] || '';
       for (let tx = 0; tx < w; tx++) {
         const ch = row[tx] || '.';
-        const type = (ch in legend) ? legend[ch] : T.FLOOR;
+        let type = (ch in legend) ? legend[ch] : T.FLOOR;
+        if (ch === '@') type = (opts.spawnTile != null ? opts.spawnTile : T.FLOOR);
         tiles[ty * w + tx] = type;
         if (ch === '@') spawn = { x: tx * 16 + 8, y: ty * 16 + 14 };
+        if (ch === 'X') exitDoor = { tx, ty };
         if (ch === 'D' || ch === 'd') doors.push({ tx, ty, ch });
       }
     }
-    return { name, w, h, tiles, doors, spawn, meta: opts.meta || {} };
+    return { name, w, h, tiles, doors, spawn, exitDoor, meta: opts.meta || { interactions: {}, props: [], signs: [] } };
+  }
+
+  // ---- town layout -------------------------------------------------------
+  function setc(s, i, c) { return s.substring(0, i) + c + s.substring(i + 1); }
+
+  // plus-shaped street block: walkable bands at cols 7-8 (vertical) and rows 7-8 (horizontal),
+  // plus sidewalk bands, with buildings filling the quadrants. Edges align across screens.
+  function street(opts) {
+    opts = opts || {};
+    const rows = [
+      'BBBBBBBSSBBBBBBB',
+      'BBBBBBBSSBBBBBBB',
+      'BBBBBBBSSBBBBBBB',
+      'SSSSSSSSSSSSSSSS',
+      'SSSSSSSSSSSSSSSS',
+      'BBBBBBBSSBBBBBBB',
+      'BBBBBBBSSBBBBBBB',
+      'RRRRRRRRRRRRRRRR',
+      'RRRRRRRRRRRRRRRR',
+      'BBBBBBBSSBBBBBBB',
+      'BBBBBBBSSBBBBBBB',
+      'SSSSSSSSSSSSSSSS',
+      'SSSSSSSSSSSSSSSS',
+      'BBBBBBBSSBBBBBBB',
+      'BBBBBBBSSBBBBBBB'
+    ];
+    (opts.doors || []).forEach(d => { rows[d.ty] = setc(rows[d.ty], d.tx, 'D'); });
+    if (opts.spawn) rows[opts.spawn.ty] = setc(rows[opts.spawn.ty], opts.spawn.tx, '@');
+    return rows;
+  }
+
+  function park() {
+    return [
+      'gggggggggggggggg',
+      'ggTTgggggggTTggg',
+      'gggggggggggggggg',
+      'ggggg~~~~~~ggggg',
+      'gggg~~~~~~~~gggg',
+      'gggg~~~~~~~~gggg',
+      'ggggg~~~~~~ggggg',
+      'gggggggggggggggg',
+      'ggTggggggggggTgg',
+      'gggggggggggggggg',
+      'gggggggggggggggg',
+      'gggTTgggggTTgggg',
+      'gggggggggggggggg',
+      'gggggggggggggggg',
+      'gggggggggggggggg'
+    ];
+  }
+
+  function wireBar(s, tx, ty, id, sign) {
+    s.meta.interactions[tx + ',' + ty] = () => BC.enterBar(id);
+    s.meta.signs.push({ tx, ty, text: sign });
+  }
+  function addScooter(s, tx, ty) {
+    s.meta.props.push({ tx, ty, type: 'scooter' });
+    s.meta.interactions[tx + ',' + ty] = (g) => {
+      g.rentScooter();
+      BC.ui.toast('Scooter unlocked: ' + g.run.scooterPct + '% battery (yikes).');
+      BC.audio && BC.audio.sfx('confirm');
+    };
+  }
+  function addBike(s, tx, ty) {
+    s.meta.props.push({ tx, ty, type: 'bike' });
+    s.meta.interactions[tx + ',' + ty] = (g) => {
+      if (!g.hasItem('bike')) {
+        g.giveItem('bike');
+        BC.ui.toast('A free bike! Yours for good now. (Press X to ride.)', { good: true });
+        BC.audio && BC.audio.sfx('stamp');
+      } else {
+        BC.ui.toast('An empty bike rack. You already have a bike.');
+      }
+    };
+  }
+
+  function buildTown(world) {
+    const S = world.screens;
+    S['0,0'] = fromAscii('Maple Street', street({ doors: [{ tx: 3, ty: 2 }], spawn: { tx: 8, ty: 4 } }), { spawnTile: T.SIDEWALK });
+    wireBar(S['0,0'], 3, 2, 'tipsy_newt', 'THE TIPSY NEWT');
+
+    S['1,0'] = fromAscii('Downtown', street({ doors: [{ tx: 3, ty: 2 }] }));
+    wireBar(S['1,0'], 3, 2, 'hail_mary', 'THE HAIL MARY');
+    addScooter(S['1,0'], 11, 3);
+
+    S['2,0'] = fromAscii('The Strip', street({ doors: [{ tx: 12, ty: 2 }] }));
+    wireBar(S['2,0'], 12, 2, 'off_key_west', 'OFF-KEY WEST');
+
+    S['0,1'] = fromAscii('Riverside Park', park(), { meta: { interactions: {}, props: [], signs: [], park: true } });
+    addBike(S['0,1'], 8, 10);
+
+    S['1,1'] = fromAscii('Old Town', street({ doors: [{ tx: 3, ty: 2 }] }));
+    wireBar(S['1,1'], 3, 2, 'sticky_floor', 'THE STICKY FLOOR');
+
+    S['2,1'] = fromAscii('Backstreets', street({}));
   }
 
   const world = {
-    T, SOLID, fromAscii, drawTile,
+    T, SOLID, fromAscii, drawTile, buildTown,
     screens: {},
     startKey: '0,0',
     _built: false,
@@ -116,42 +213,7 @@
     init() {
       if (this._built) return;
       this._built = true;
-
-      this.screens['0,0'] = fromAscii('Maple Street', [
-        'BBBBBBBBBBBBBBBB',
-        'BBBBBBBBBBBBBBBB',
-        'BBBdBBBBBBBdBBBB',
-        'SSSSSSSSSSSSSSSS',
-        'SSSSSSSSSSSSSSSS',
-        'gTgSSSSSSSSSSSgg',
-        'RRRRRRRRRRRRRRRR',
-        'RRRRRRRRRRRRRRRR',
-        'RRRRRRRRRRRRRRRR',
-        'SSSSSSSSSSSSSSSS',
-        'SSSSSS@SSSSSSSSS',
-        'BBBBBBBBBBBBBBBB',
-        'BBBdBBBBBBBdBBBB',
-        'BBBBBBBBBBBBBBBB',
-        'BBBBBBBBBBBBBBBB'
-      ]);
-
-      this.screens['1,0'] = fromAscii('Maple & 2nd', [
-        'BBBBBBBBBBBBBBBB',
-        'BBBBBBBBBBBBBBBB',
-        'BBBBBBdBBBBBBBBB',
-        'SSSSSSSSSSSSSSSS',
-        'SSSSSSSSSSSSSSSS',
-        'ggggggggTggggggg',
-        'RRRRRRRRRRRRRRRR',
-        'RRRRRRRRRRRRRRRR',
-        'RRRRRRRRRRRRRRRR',
-        'SSSSSSSSSSSSSSSS',
-        'SSSSSSSSSSSSSSSS',
-        'ggggTgggggggTggg',
-        'gggggggggggggggg',
-        'BBBBBBBBBBBBBBBB',
-        'BBBBBBBBBBBBBBBB'
-      ]);
+      buildTown(this);
     },
 
     screen(key) { return this.screens[key]; },

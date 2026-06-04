@@ -158,6 +158,12 @@
     learn(f) { if (!this.meta.knowledge[f]) { this.meta.knowledge[f] = true; this.save(); } },
 
     // ---- punch card ----
+    // Active card = punch-card stops that actually exist in the build yet.
+    // The win condition grows automatically as bars/quests are added.
+    activeCard() {
+      return PUNCHCARD.filter(id =>
+        (BC.bars && BC.bars[id]) || (BC.quests && BC.quests[id]));
+    },
     earnStamp(id) {
       if (this.run.stamps[id]) return;
       this.run.stamps[id] = true;
@@ -167,8 +173,9 @@
       BC.audio && BC.audio.sfx('stamp');
     },
     hasStamp(id) { return !!this.run.stamps[id]; },
-    stampCount() { return PUNCHCARD.filter(id => this.run.stamps[id]).length; },
-    allStamps() { return PUNCHCARD.every(id => this.run.stamps[id]); },
+    stampCount() { return this.activeCard().filter(id => this.run.stamps[id]).length; },
+    cardSize() { return this.activeCard().length; },
+    allStamps() { const c = this.activeCard(); return c.length > 0 && c.every(id => this.run.stamps[id]); },
     stampName(id) { return STAMP_NAMES[id] || id; },
 
     // ---- endings ----
