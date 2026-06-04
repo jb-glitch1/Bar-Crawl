@@ -33,18 +33,20 @@
     if (BC.scene.enter) BC.scene.enter(args || {});
   };
 
-  // text helper with optional drop shadow
+  // text helper with a crisp 4-direction outline for legibility on any background
+  const OUTLINE = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
   BC.text = function (ctx, str, x, y, opt) {
     opt = opt || {};
     ctx.font = (opt.size || 8) + 'px "Courier New", monospace';
     ctx.textAlign = opt.align || 'left';
     ctx.textBaseline = opt.baseline || 'top';
+    x = x | 0; y = y | 0;
     if (opt.shadow !== false) {
-      ctx.fillStyle = opt.shadowColor || 'rgba(0,0,0,0.7)';
-      ctx.fillText(str, (x | 0) + 1, (y | 0) + 1);
+      ctx.fillStyle = opt.shadowColor || 'rgba(0,0,0,0.95)';
+      for (const o of OUTLINE) ctx.fillText(str, x + o[0], y + o[1]);
     }
     ctx.fillStyle = opt.color || '#fff';
-    ctx.fillText(str, x | 0, y | 0);
+    ctx.fillText(str, x, y);
   };
 
   BC.rect = function (ctx, x, y, w, h, c) {
@@ -90,6 +92,10 @@
     canvas = document.getElementById('game');
     ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
+    // render at 2x backing resolution (512x480) for crisper text; all game
+    // code keeps drawing in 256x240 logical space.
+    BC.RES = (canvas.width / BC.W) || 1;
+    ctx.scale(BC.RES, BC.RES);
     BC.canvas = canvas;
     BC.ctx = ctx;
     if (BC.world) BC.world.init();

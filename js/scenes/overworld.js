@@ -96,11 +96,11 @@
         else if (trans.dir === 'up') { fy = H * e; ty = -H + H * e; }
         BC.world.draw(ctx, BC.world.screens[trans.fromKey], fx, fy);
         BC.world.draw(ctx, BC.world.screens[trans.toKey], tx, ty);
-        BC.gfx.actor(ctx, trans.px - 8 + tx, trans.py - 16 + ty, player.dir, 0, player.colors);
+        drawRider(ctx, trans.px - 8 + tx, trans.py - 16 + ty, player.dir, 0);
       } else {
         BC.world.draw(ctx, screen, 0, 0);
         drawProps(ctx, screen, 0, 0);
-        BC.gfx.actor(ctx, player.x - 8, player.y - 16, player.dir, player.frame, player.colors);
+        drawRider(ctx, player.x - 8, player.y - 16, player.dir, player.frame);
         drawSigns(ctx, screen, 0, 0);
       }
       // location label
@@ -150,6 +150,14 @@
     }
   }
 
+  function drawRider(ctx, x, y, dir, frame) {
+    const veh = BC.game.run.vehicle;
+    // lift the rider so the vehicle (deck/wheels/handlebar) reads clearly beneath
+    if (veh === 'scooter') { BC.gfx.scooter(ctx, x, y, dir); BC.gfx.actor(ctx, x, y - 4, dir, frame, player.colors); }
+    else if (veh === 'bike') { BC.gfx.bike(ctx, x, y, dir); BC.gfx.actor(ctx, x, y - 3, dir, frame, player.colors); }
+    else BC.gfx.actor(ctx, x, y, dir, frame, player.colors);
+  }
+
   function placeSafe(scr, p) {
     if (!BC.solidBox(scr, p.box())) return;
     for (let r = 1; r <= 7; r++) {
@@ -170,10 +178,9 @@
     for (const pr of props) {
       const x = ox + pr.tx * 16, y = oy + pr.ty * 16;
       if (pr.type === 'scooter') {
-        BC.rect(ctx, x + 6, y + 2, 4, 13, '#445'); // post
-        BC.rect(ctx, x + 2, y - 4, 12, 7, '#1c2740'); // sign
-        BC.text(ctx, 'SCOOT', x + 3, y - 3, { color: '#7ad0ff', size: 6, shadow: false });
-        BC.rect(ctx, x + 1, y + 13, 14, 2, '#222');
+        BC.rect(ctx, x + 1, y + 16, 14, 2, 'rgba(0,0,0,0.3)'); // ground pad
+        BC.gfx.scooter(ctx, x, y - 1, 'right');                // a parked rental scooter
+        BC.gfx.px(ctx, x + 13, y, 1, 4, '#7ad0ff');           // app beacon
       } else if (pr.type === 'bike') {
         if (BC.game.hasItem('bike')) {
           BC.rect(ctx, x + 2, y + 10, 12, 2, '#556'); // empty rack

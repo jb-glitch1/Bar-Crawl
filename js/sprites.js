@@ -56,5 +56,43 @@
     }
   };
 
+  // a stand-up kick/e-scooter, drawn at the same top-left as the actor (under it)
+  gfx.scooter = function (ctx, x, y, dir) {
+    const deck = '#d4d8dc', wheel = '#141419', stem = '#a9afb5', grip = '#2c3036', led = '#7ad0ff';
+    if (dir === 'left' || dir === 'right') {
+      const fx = dir === 'right' ? x + 12 : x + 3; // stem/front x
+      px(ctx, x + 2, y + 14, 12, 2, deck);          // deck
+      px(ctx, x + 1, y + 15, 3, 3, wheel);          // rear wheel
+      px(ctx, x + 12, y + 15, 3, 3, wheel);         // front wheel
+      px(ctx, fx, y + 4, 2, 11, stem);              // stem
+      px(ctx, fx - 2, y + 3, 6, 2, grip);           // handlebar
+      px(ctx, dir === 'right' ? fx + 2 : fx - 1, y + 5, 1, 1, led); // headlight
+    } else {
+      const fy = dir === 'up' ? y + 4 : y + 13;
+      px(ctx, x + 7, y + 8, 3, 8, deck);            // deck (vertical)
+      px(ctx, x + 6, y + 7, 5, 2, wheel);           // wheel
+      px(ctx, x + 6, y + 15, 5, 2, wheel);          // wheel
+      px(ctx, x + 7, fy, 3, 3, stem);               // stem
+      px(ctx, x + 4, fy, 9, 2, grip);               // handlebar
+    }
+  };
+
+  // a simple bicycle, same coordinate convention
+  gfx.bike = function (ctx, x, y, dir) {
+    const wheel = '#15151c', hub = '#3a3a44', frame = '#c0444f';
+    if (dir === 'left' || dir === 'right') {
+      px(ctx, x + 1, y + 13, 4, 4, wheel); px(ctx, x + 11, y + 13, 4, 4, wheel);
+      px(ctx, x + 2, y + 14, 2, 2, hub);   px(ctx, x + 12, y + 14, 2, 2, hub);
+      px(ctx, x + 4, y + 10, 8, 2, frame); // top tube
+      px(ctx, x + 7, y + 11, 2, 3, frame); // seat post
+      px(ctx, x + 11, y + 8, 2, 4, frame); // handlebars
+    } else {
+      px(ctx, x + 6, y + 13, 4, 4, wheel);
+      px(ctx, x + 7, y + 14, 2, 2, hub);
+      px(ctx, x + 4, y + 8, 8, 2, frame);  // handlebar
+      px(ctx, x + 7, y + 9, 2, 5, frame);
+    }
+  };
+
   BC.gfx = gfx;
 })();

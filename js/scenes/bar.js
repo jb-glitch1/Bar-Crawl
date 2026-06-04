@@ -65,6 +65,11 @@
 
     update(dt) {
       this.player.update(dt, this.screen);
+      // walk onto the exit doormat to leave (and you can also press Z facing it)
+      const ed = this.screen.exitDoor;
+      if (ed && Math.floor(this.player.x / 16) === ed.tx && Math.floor(this.player.y / 16) === ed.ty) {
+        this.leave(); return;
+      }
       if (BC.input.pressed('a')) this.tryInteract();
     },
 
@@ -110,7 +115,11 @@
         });
       } else {
         const id = this.id, type = n.challenge;
-        BC.ui.say(n.greet || ['Ready?'], { speaker: n.name }, () => BC.startChallenge(type, id));
+        BC.ui.say(n.greet || ['Ready?'], { speaker: n.name }, () => {
+          BC.ui.choose('Give it a shot?', ['Yes, let\'s go', 'Maybe later'], (i) => {
+            if (i === 0) BC.startChallenge(type, id);
+          });
+        });
       }
     },
 
