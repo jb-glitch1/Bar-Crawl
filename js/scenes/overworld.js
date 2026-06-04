@@ -19,6 +19,7 @@
       BC.world.init();
       screenKey = (args && args.key) || BC.world.startKey;
       screen = BC.world.screens[screenKey];
+      BC.world.here = screenKey;
       const sp = screen.spawn || { x: 128, y: 120 };
       player = BC.player = new BC.Player(sp.x, sp.y);
       if (args && args.px != null) {
@@ -34,6 +35,7 @@
         if (trans.t >= 1) {
           screenKey = trans.toKey;
           screen = BC.world.screens[screenKey];
+          BC.world.here = screenKey;
           player.x = trans.px; player.y = trans.py;
           placeSafe(screen, player);
           trans = null;

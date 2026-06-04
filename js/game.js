@@ -84,6 +84,7 @@
       if (this.run.tipsy > 0) {
         this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerGameMin * gmin);
       }
+      if (this.run.tipsy < 65) this.run.flags.warnBlackout = false; // re-arm the warning after sobering
       if (this.run.energized > 0) this.run.energized -= dt;
       this._updateMood();
       if (BC.audio) BC.audio.update(this.run.tipsy);
@@ -113,6 +114,10 @@
       this.run.tipsy = U.clamp(this.run.tipsy + v, 0, 100);
       if (BC.audio) BC.audio.sfx('drink');
       if (BC.fx) BC.fx.bubbles();
+      if (this.run.tipsy >= 80 && this.run.tipsy < 100 && !this.run.flags.warnBlackout) {
+        this.run.flags.warnBlackout = true;
+        BC.ui && BC.ui.toast('Careful — one more big one and you BLACK OUT. Grab food/water.', { good: false });
+      }
       if (this.run.tipsy >= this.config.blackoutAt) this.endNight('blackout');
     },
     eat(v) {

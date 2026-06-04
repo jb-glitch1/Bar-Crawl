@@ -287,7 +287,7 @@
     const s = fromAscii(name, rows, { spawnTile: T.GRASS, meta: { interactions: {}, props: [], signs: [], buildings: [], actors: opts.actors || [], park: !!opts.park, throughRoad: !!(E.left && E.right) } });
     builds.forEach(b => {
       const ext = EXT[b.id] || EXT.home;
-      s.meta.buildings.push({ x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
+      s.meta.buildings.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
       const key2 = b.dx + ',' + b.dy;
       const ret = { key: key, tx: b.dx, ty: b.dy }; // return spot = just outside this door
       if (b.id === 'reggies') s.meta.interactions[key2] = (g) => speakeasyGate(g, ret);
