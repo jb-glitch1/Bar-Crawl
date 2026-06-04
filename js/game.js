@@ -4,10 +4,10 @@
   const U = BC.util;
 
   BC.config = {
-    debug: true,            // dev hotkeys (disabled in polish)
-    timeScale: 0.5,         // in-game minutes per real second (~18 min full night)
+    debug: false,           // dev hotkeys
+    timeScale: 0.42,        // in-game minutes per real second (~21 min full night)
     nightMinutes: 540,      // 5:00 PM -> 2:00 AM
-    tipsyDecayPerSec: 0.7,  // sober up slowly when not drinking
+    tipsyDecayPerSec: 0.6,  // sober up slowly when not drinking
     blackoutAt: 100
   };
 
@@ -82,6 +82,7 @@
       }
       this._updateMood();
       if (BC.audio) BC.audio.update(this.run.tipsy);
+      if (this.allStamps()) { this.endNight('complete'); return; }
       if (this.run.minutes >= this.config.nightMinutes) this.endNight('lastcall');
     },
 
@@ -183,7 +184,7 @@
       if (!this.run || this.run.ended) return;
       this.run.ended = true;
       this.run.endReason = reason;
-      const won = (reason === 'lastcall' && this.allStamps());
+      const won = reason === 'complete' || (reason === 'lastcall' && this.allStamps());
       if (BC.flow) BC.flow.endNight(reason, won);
     }
   };

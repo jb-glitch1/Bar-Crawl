@@ -3,9 +3,26 @@
   const BC = window.BC || (window.BC = {});
   BC.W = 256; BC.H = 240; BC.TILE = 16;
 
-  let canvas, ctx, last = 0;
+  let canvas, ctx, last = 0, gtime = 0;
 
   BC.scenes = BC.scenes || {};
+
+  // the world sways as you get drunk (only in the walkable scenes)
+  function drunkWobble() {
+    if (!BC.game || !BC.game.run) return null;
+    if (BC.sceneName !== 'overworld' && BC.sceneName !== 'bar') return null;
+    const t = BC.game.run.tipsy;
+    if (t < 35) return null;
+    const a = ((t - 35) / 65) * 3.4;
+    return { x: Math.sin(gtime * 4.0) * a, y: Math.cos(gtime * 5.3) * a * 0.7 };
+  }
+  function drunkTint() {
+    if (!BC.game || !BC.game.run) return;
+    const t = BC.game.run.tipsy;
+    if (t <= 50) return;
+    ctx.fillStyle = 'rgba(120,40,160,' + (((t - 50) / 50) * 0.13).toFixed(3) + ')';
+    ctx.fillRect(0, 0, BC.W, BC.H);
+  }
 
   BC.setScene = function (name, args) {
     if (BC.scene && BC.scene.exit) BC.scene.exit();
@@ -53,11 +70,17 @@
     last = ts;
     if (dt > 0.1) dt = 0.1; // clamp after tab-out
     BC.dt = dt;
+    gtime += dt;
     if (BC.ui) BC.ui.update(dt);
     if (BC.scene) {
       if (BC.scene.update && !(BC.ui && BC.ui.blocking)) BC.scene.update(dt);
-      if (BC.scene.render) BC.scene.render(ctx);
+      if (BC.scene.render) {
+        const w = drunkWobble();
+        if (w) { ctx.save(); ctx.translate(w.x, w.y); BC.scene.render(ctx); ctx.restore(); }
+        else BC.scene.render(ctx);
+      }
     }
+    drunkTint();
     if (BC.game) BC.game.tick(dt);
     if (BC.ui) BC.ui.render(ctx);
     BC.input.clear();
@@ -69,6 +92,7 @@
     ctx.imageSmoothingEnabled = false;
     BC.canvas = canvas;
     BC.ctx = ctx;
+    if (BC.world) BC.world.init();
     if (BC.game) BC.game.init();
     BC.setScene(BC.firstScene || 'overworld');
     requestAnimationFrame(frame);

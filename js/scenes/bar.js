@@ -14,11 +14,15 @@
     { fadeOut: 1, dur: 0.2 }, { do: () => BC.setScene('mg_' + type, { barId: id }) }, { fadeIn: 0, dur: 0.2 }
   ]);
   BC.afterMinigame = (barId, success) => {
+    const g = BC.game, def = BC.bars[barId];
     if (success) {
-      BC.game.earnStamp(barId);
-      const def = BC.bars[barId];
-      if (def && def.onStamp) def.onStamp(BC.game);
+      g.earnStamp(barId);
+      if (def && def.onStamp) def.onStamp(g);
+      // a celebratory drink for clearing the challenge (this is how you get tipsy)
+      const dd = (def && def.drinkOnWin != null) ? def.drinkOnWin : 14;
+      if (dd > 0) g.drink(dd);
     }
+    if (g.run.ended) return; // a blackout (or 2 AM) just took over the night
     BC.ui.cutscene([
       { fadeOut: 1, dur: 0.2 },
       { do: () => { BC.setScene('bar', { id: barId, fromMinigame: true }); if (!success) BC.ui.toast('Maybe next time.'); } },
@@ -98,7 +102,12 @@
     talkChallenge(n) {
       const g = BC.game;
       if (g.hasStamp(this.id)) {
-        BC.ui.say(n.repeat || ['Good to see you again.'], { speaker: n.name });
+        BC.ui.say(n.repeat || ['Good to see you again.'], { speaker: n.name }, () => {
+          if ((BC.bars[this.id].drinkOnWin) === 0) return; // diner etc. don't push booze
+          BC.ui.choose('Order another round?', ['Sure - one more (+tipsy)', 'Nah, pacing myself'], (i) => {
+            if (i === 0) { g.drink(12); BC.ui.toast('*clink* another one down'); }
+          });
+        });
       } else {
         const id = this.id, type = n.challenge;
         BC.ui.say(n.greet || ['Ready?'], { speaker: n.name }, () => BC.startChallenge(type, id));

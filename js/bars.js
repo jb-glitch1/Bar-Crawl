@@ -160,6 +160,7 @@
     sobering_thoughts: {
       name: 'Sobering Thoughts', room: INTERIOR, mood: M.diner, door: { key: '1,2', tx: 3, ty: 2 },
       intro: ['Sobering Thoughts — 24-hr diner. Grease so honest it could testify.'],
+      drinkOnWin: 0,
       onStamp: (g) => { g.eat(40); BC.ui.toast('The grease soaks up the night. (much less tipsy)'); },
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Line Cook', colors: { shirt: '#ddd', hair: '#321' }, role: 'challenge', challenge: 'burrito',

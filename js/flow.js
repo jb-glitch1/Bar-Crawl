@@ -39,7 +39,9 @@
       const steps = [];
       steps.push({ fadeOut: 1, dur: 0.8, color: '#000' });
 
-      if (reason === 'lastcall') {
+      if (reason === 'complete') {
+        steps.push({ text: ['The final stamp lands on the card.', 'You did it — with time to spare. The night, for once, is yours.'] });
+      } else if (reason === 'lastcall') {
         steps.push({ text: ['2:00 AM. The lights come up, merciless and fluorescent.', '"Last call was last call." A bouncer folds you into a waiting car.'] });
       } else if (reason === 'blackout') {
         steps.push({ text: ['Everything goes... sideways.', 'You black out.'] });
