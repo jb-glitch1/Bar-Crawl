@@ -103,9 +103,9 @@
         drawRider(ctx, player.x - 8, player.y - 16, player.dir, player.frame);
         drawSigns(ctx, screen, 0, 0);
       }
-      // location label
+      // location label (top-center, between the HUD panels)
       const label = trans ? BC.world.screens[trans.toKey].name : screen.name;
-      BC.text(ctx, label, 4, 4, { color: '#e6e6ff', size: 8 });
+      BC.text(ctx, label, BC.W / 2, 34, { color: '#fff', size: 9, align: 'center' });
 
       // scooter "app" readout (diegetic — the only persistent HUD)
       if (BC.game.run.vehicle === 'scooter') {

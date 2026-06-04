@@ -101,6 +101,7 @@
     }
     timeTint();
     drunkTint();
+    if (BC.hud) BC.hud.draw(ctx);
     if (BC.game) BC.game.tick(dt);
     if (BC.ui) BC.ui.render(ctx);
     BC.input.clear();
