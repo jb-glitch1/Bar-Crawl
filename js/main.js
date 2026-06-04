@@ -52,10 +52,13 @@
     last = ts;
     if (dt > 0.1) dt = 0.1; // clamp after tab-out
     BC.dt = dt;
+    if (BC.ui) BC.ui.update(dt);
     if (BC.scene) {
-      if (BC.scene.update) BC.scene.update(dt);
+      if (BC.scene.update && !(BC.ui && BC.ui.blocking)) BC.scene.update(dt);
       if (BC.scene.render) BC.scene.render(ctx);
     }
+    if (BC.game) BC.game.tick(dt);
+    if (BC.ui) BC.ui.render(ctx);
     BC.input.clear();
   }
 
@@ -65,6 +68,7 @@
     ctx.imageSmoothingEnabled = false;
     BC.canvas = canvas;
     BC.ctx = ctx;
+    if (BC.game) BC.game.init();
     BC.setScene(BC.firstScene || 'overworld');
     requestAnimationFrame(frame);
   };
