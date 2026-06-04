@@ -56,7 +56,7 @@
         steps.push({ fadeIn: 0, dur: 0.8 });
       } else {
         steps.push({ text: [U.choice(LOOP)] });
-        steps.push({ do: () => { g.newRun(); BC.setScene('overworld', { key: BC.world.startKey }); } });
+        steps.push({ do: () => { g.newRun(); BC.setScene('home', { skipIntro: false }); } });
         steps.push({ fadeIn: 0, dur: 0.9 });
       }
       BC.ui.cutscene(steps);

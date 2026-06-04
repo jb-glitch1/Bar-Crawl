@@ -16,7 +16,7 @@
     BC.ui.cutscene([
       { fadeOut: 1, dur: 0.5, color: '#000' },
       { text: ["It's 5:00 PM. The whole crawl is ahead of you.", 'Hit every bar, earn every stamp. The bars close at 2:00 AM.', "Miss last call and you're sent home... to do it all again."] },
-      { do: () => BC.setScene('overworld', { key: BC.world.startKey }) },
+      { do: () => BC.setScene('home', {}) },
       { fadeIn: 0, dur: 0.7 }
     ]);
   }

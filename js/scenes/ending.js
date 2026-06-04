@@ -10,7 +10,7 @@
       t += dt;
       if (t > 0.6 && (BC.input.pressed('a') || BC.input.pressed('start'))) {
         BC.game.newRun();
-        BC.setScene('overworld', { key: BC.world.startKey });
+        BC.setScene('home', {});
       }
     },
     render(ctx) {

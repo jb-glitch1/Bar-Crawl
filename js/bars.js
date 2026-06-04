@@ -171,4 +171,38 @@
       ]
     }
   };
+
+  // ---- themed interior palettes + furniture ------------------------------
+  const PAL = {
+    tipsy_newt: { wall: '#5a4636', floor: '#46362a', floor2: '#402f24', counter: '#7a5a3a' },
+    hail_mary: { wall: '#2a3a4a', floor: '#2e3a46', floor2: '#28333e', counter: '#3a4a5a' },
+    off_key_west: { wall: '#264a4a', floor: '#1f3a3a', floor2: '#1a3434', counter: '#1f9a9a' },
+    pour_decisions: { wall: '#3a2230', floor: '#2e1c26', floor2: '#281620', counter: '#5a2030' },
+    sticky_floor: { wall: '#3a3a36', floor: '#2e2e2a', floor2: '#282824', counter: '#5a5a52' },
+    cellar_door: { wall: '#4a4a52', floor: '#3a3a40', floor2: '#34343a', counter: '#6a5a4a' },
+    witz_end: { wall: '#26264a', floor: '#22223e', floor2: '#1e1e36', counter: '#3a3a6a' },
+    deja_brew: { wall: '#2e1e3a', floor: '#261a34', floor2: '#22162e', counter: '#5a3a6a' },
+    sleigh: { wall: '#3a2a2a', floor: '#2e3a2e', floor2: '#283428', counter: '#aa3030' },
+    sobering_thoughts: { wall: '#3a4048', floor: '#c0c0c8', floor2: '#aeaeb8', counter: '#c4c4cc' },
+    speakeasy: { wall: '#2a2030', floor: '#241a28', floor2: '#1e1622', counter: '#3a2a3a' }
+  };
+  // f(type, tx, ty[, color])
+  const f = (type, tx, ty, color) => ({ type, tx, ty, color });
+  const FURN = {
+    tipsy_newt: [f('fireplace', 11, 1), f('table', 2, 7), f('stool', 2, 6), f('stool', 4, 6), f('table', 11, 8), f('plant', 13, 6), f('rug', 6, 9)],
+    hail_mary: [f('tv', 2, 1), f('tv', 6, 1, '#3a4a8a'), f('tv', 10, 1, '#7a2a2a'), f('table', 2, 8), f('table', 11, 8), f('stool', 4, 6), f('stool', 11, 6)],
+    off_key_west: [f('stage', 6, 1), f('jukebox', 1, 6), f('table', 2, 9), f('table', 12, 9), f('plant', 13, 6)],
+    pour_decisions: [f('shelf', 1, 1), f('shelf', 14, 1), f('table', 3, 8), f('table', 11, 8), f('rug', 6, 9), f('plant', 1, 10)],
+    sticky_floor: [f('pooltable', 5, 8), f('dartboard', 13, 1), f('jukebox', 1, 6), f('stool', 2, 6), f('stool', 13, 6)],
+    cellar_door: [f('shelf', 1, 1), f('shelf', 14, 1), f('table', 2, 8), f('table', 12, 8), f('stool', 11, 6)],
+    witz_end: [f('booth', 1, 9), f('booth', 12, 9), f('plant', 1, 6), f('plant', 14, 6), f('rug', 6, 6)],
+    deja_brew: [f('booth', 2, 9), f('jukebox', 14, 6), f('plant', 1, 8), f('table', 11, 8)],
+    sleigh: [f('xmastree', 1, 6), f('xmastree', 13, 6), f('fireplace', 7, 1), f('table', 4, 9), f('table', 10, 9)],
+    sobering_thoughts: [f('booth', 1, 8), f('booth', 12, 8), f('tv', 6, 1), f('stool', 4, 6), f('stool', 11, 6)],
+    speakeasy: [f('booth', 1, 9), f('shelf', 14, 1), f('jukebox', 1, 6), f('table', 11, 9), f('rug', 6, 6)]
+  };
+  Object.keys(BC.bars).forEach(id => {
+    if (PAL[id]) BC.bars[id].palette = PAL[id];
+    if (FURN[id]) BC.bars[id].furniture = FURN[id];
+  });
 })();

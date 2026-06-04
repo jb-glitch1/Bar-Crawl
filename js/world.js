@@ -5,9 +5,9 @@
   const T = {
     FLOOR: 0, WALL: 1, RUG: 2, DOOR: 3, GRASS: 4, ROAD: 5,
     SIDEWALK: 6, BUILDING: 7, TREE: 8, WATER: 9, COUNTER: 10,
-    PATH: 11, FENCE: 12, HEDGE: 13
+    PATH: 11, FENCE: 12, HEDGE: 13, PROP: 14
   };
-  const SOLID = new Set([T.WALL, T.BUILDING, T.TREE, T.WATER, T.COUNTER, T.FENCE, T.HEDGE]);
+  const SOLID = new Set([T.WALL, T.BUILDING, T.TREE, T.WATER, T.COUNTER, T.FENCE, T.HEDGE, T.PROP]);
 
   const LEGEND = {
     '#': T.WALL, '.': T.FLOOR, ',': T.RUG, 'D': T.DOOR, 'd': T.DOOR, 'X': T.DOOR,
@@ -111,6 +111,7 @@
         gfx(ctx, x, y + 14, '#3a3a48', 16, 2);
         break;
       case T.FLOOR:
+      case T.PROP:
         gfx(ctx, x, y, '#3a3340');
         if ((tx + ty) % 2 === 0) gfx(ctx, x, y, '#342e3a');
         break;
@@ -322,6 +323,21 @@
       for (let ty = 0; ty < screen.h; ty++) {
         for (let tx = 0; tx < screen.w; tx++) {
           drawTile(ctx, screen.tiles[ty * screen.w + tx], ox + tx * 16, oy + ty * 16, tx, ty);
+        }
+      }
+    },
+
+    // interiors: recolor walls/floor/counter per a bar's palette
+    drawInterior(ctx, screen, ox, oy, pal) {
+      ox = ox || 0; oy = oy || 0; pal = pal || {};
+      const wall = pal.wall || '#46465a', floor = pal.floor || '#3a3340', floor2 = pal.floor2 || '#342e3a', counter = pal.counter || '#7a5a3a';
+      for (let ty = 0; ty < screen.h; ty++) {
+        for (let tx = 0; tx < screen.w; tx++) {
+          const t = screen.tiles[ty * screen.w + tx], x = ox + tx * 16, y = oy + ty * 16;
+          if (t === T.WALL) { gfx(ctx, x, y, wall); gfx(ctx, x, y, 'rgba(255,255,255,0.06)', 16, 2); gfx(ctx, x, y + 14, 'rgba(0,0,0,0.28)', 16, 2); }
+          else if (t === T.FLOOR || t === T.PROP) { gfx(ctx, x, y, floor); if ((tx + ty) % 2 === 0) gfx(ctx, x, y, floor2); }
+          else if (t === T.COUNTER) { gfx(ctx, x, y, counter); gfx(ctx, x, y, 'rgba(0,0,0,0.28)', 16, 3); gfx(ctx, x, y, 'rgba(255,255,255,0.08)', 16, 1); }
+          else drawTile(ctx, t, x, y, tx, ty);
         }
       }
     }

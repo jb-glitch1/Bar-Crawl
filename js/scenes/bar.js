@@ -43,6 +43,16 @@
       this.def = BC.bars[args.id];
       this.id = args.id;
       this.screen = BC.world.fromAscii(this.def.name, this.def.room);
+      // place furniture (solid pieces block movement)
+      this.furniture = (this.def.furniture || []).map(f => Object.assign({}, f));
+      for (const f of this.furniture) {
+        if (!BC.furniture.solid(f.type)) continue;
+        const sz = BC.furniture.size(f.type);
+        for (let yy = 0; yy < sz[1]; yy++) for (let xx = 0; xx < sz[0]; xx++) {
+          const tx = f.tx + xx, ty = f.ty + yy;
+          if (tx >= 0 && ty >= 0 && tx < this.screen.w && ty < this.screen.h) this.screen.tiles[ty * this.screen.w + tx] = BC.world.T.PROP;
+        }
+      }
       const sp = this.screen.spawn || { x: 120, y: 200 };
       this.player = BC.player = new BC.Player(sp.x, sp.y);
       this.player.dir = 'up';
@@ -210,12 +220,16 @@
 
     render(ctx) {
       ctx.clearRect(0, 0, BC.W, BC.H);
-      BC.world.draw(ctx, this.screen, 0, 0);
-      // draw NPCs then player, sorted by y so overlaps look right
-      const all = this.npcs.map(n => ({ n, y: n.y })).concat([{ player: this.player, y: this.player.y }]);
+      BC.world.drawInterior(ctx, this.screen, 0, 0, this.def.palette);
+      // depth-sort furniture, NPCs and the player by their base Y
+      const all = [];
+      for (const f of (this.furniture || [])) all.push({ y: BC.furniture.footY(f), f });
+      for (const n of this.npcs) all.push({ y: n.y, n });
+      all.push({ y: this.player.y, player: true });
       all.sort((a, b) => a.y - b.y);
       for (const e of all) {
         if (e.player) BC.gfx.actor(ctx, this.player.x - 8, this.player.y - 16, this.player.dir, this.player.frame, this.player.colors);
+        else if (e.f) BC.furniture.draw(ctx, e.f);
         else BC.gfx.actor(ctx, e.n.x - 8, e.n.y - 16, e.n.dir, 0, e.n.colors);
       }
       // banner
