@@ -3,7 +3,7 @@
   const BC = window.BC || (window.BC = {});
   const S = BC.scenes || (BC.scenes = {});
 
-  let player, screen, screenKey, trans = null;
+  let player, screen, screenKey, trans = null, lastDoor = null;
   const SLIDE = 0.34; // seconds per screen flip
 
   function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
@@ -25,7 +25,7 @@
         player.x = args.px; player.y = args.py;
         player.dir = args.dir || 'down';
       }
-      trans = null;
+      trans = null; lastDoor = null;
     },
 
     update(dt) {
@@ -68,11 +68,14 @@
         if (BC.input.pressed('four')) g.run.minutes = Math.min(g.config.nightMinutes, g.run.minutes + 30);
       }
 
-      // step onto a bar door = walk straight in
+      // step onto a bar door = walk straight in (fire once per tile entry)
       const ctx2 = Math.floor(player.x / 16), cty2 = Math.floor(player.y / 16);
+      const dk = ctx2 + ',' + cty2;
       if (screen.tiles[cty2 * screen.w + ctx2] === BC.world.T.DOOR) {
-        const inter = screen.meta.interactions && screen.meta.interactions[ctx2 + ',' + cty2];
-        if (inter) { inter(g); return; }
+        const inter = screen.meta.interactions && screen.meta.interactions[dk];
+        if (inter && lastDoor !== dk) { lastDoor = dk; inter(g); return; }
+      } else {
+        lastDoor = null;
       }
 
       const W = BC.W, H = BC.H;

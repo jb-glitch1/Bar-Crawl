@@ -183,8 +183,18 @@
     };
   }
 
+  function wireSpeakeasy(s, tx, ty) {
+    s.meta.signs.push({ tx, ty, text: "REGGIE'S FRIDGES" });
+    s.meta.interactions[tx + ',' + ty] = (g) => {
+      if (g.tipsyTier() < 1) { BC.ui.toast('"Reggie\'s Reliable Refrigeration." Dark. Smells of freon and secrets.'); return; }
+      if (!g.knows('password')) { BC.ui.say(['A slot slides open at eye level. "Password?"', '...you\'ve got nothing. Maybe somebody tipsy knows it.'], { speaker: 'The Slot' }); return; }
+      BC.enterBar('speakeasy');
+    };
+  }
+
   function buildTown(world) {
     const S = world.screens;
+    // Row 0 — uptown / early tier
     S['0,0'] = fromAscii('Maple Street', street({ doors: [{ tx: 3, ty: 2 }], spawn: { tx: 8, ty: 4 } }), { spawnTile: T.SIDEWALK });
     wireBar(S['0,0'], 3, 2, 'tipsy_newt', 'THE TIPSY NEWT');
 
@@ -192,16 +202,31 @@
     wireBar(S['1,0'], 3, 2, 'hail_mary', 'THE HAIL MARY');
     addScooter(S['1,0'], 11, 3);
 
-    S['2,0'] = fromAscii('The Strip', street({ doors: [{ tx: 12, ty: 2 }] }));
-    wireBar(S['2,0'], 12, 2, 'off_key_west', 'OFF-KEY WEST');
+    S['2,0'] = fromAscii('The Strip', street({ doors: [{ tx: 3, ty: 2 }, { tx: 12, ty: 2 }] }));
+    wireBar(S['2,0'], 3, 2, 'off_key_west', 'OFF-KEY WEST');
+    wireBar(S['2,0'], 12, 2, 'pour_decisions', 'POUR DECISIONS');
 
+    // Row 1 — midtown / weird tier
     S['0,1'] = fromAscii('Riverside Park', park(), { meta: { interactions: {}, props: [], signs: [], park: true } });
     addBike(S['0,1'], 8, 10);
 
-    S['1,1'] = fromAscii('Old Town', street({ doors: [{ tx: 3, ty: 2 }] }));
+    S['1,1'] = fromAscii('Old Town', street({ doors: [{ tx: 3, ty: 2 }, { tx: 12, ty: 2 }] }));
     wireBar(S['1,1'], 3, 2, 'sticky_floor', 'THE STICKY FLOOR');
+    wireBar(S['1,1'], 12, 2, 'cellar_door', 'THE CELLAR DOOR');
 
-    S['2,1'] = fromAscii('Backstreets', street({}));
+    S['2,1'] = fromAscii('Backstreets', street({ doors: [{ tx: 3, ty: 2 }, { tx: 12, ty: 2 }] }));
+    wireBar(S['2,1'], 3, 2, 'witz_end', 'WITZ END');
+    wireSpeakeasy(S['2,1'], 12, 2);
+
+    // Row 2 — downtown / bespoke-strange tier
+    S['0,2'] = fromAscii('Frostgate', street({ doors: [{ tx: 3, ty: 2 }] }));
+    wireBar(S['0,2'], 3, 2, 'sleigh', "SLEIGH IT AIN'T SO");
+
+    S['1,2'] = fromAscii('Night Market', street({ doors: [{ tx: 3, ty: 2 }] }));
+    wireBar(S['1,2'], 3, 2, 'sobering_thoughts', 'SOBERING THOUGHTS');
+
+    S['2,2'] = fromAscii('The Fringe', street({ doors: [{ tx: 3, ty: 2 }] }));
+    wireBar(S['2,2'], 3, 2, 'deja_brew', 'DEJA BREW');
   }
 
   const world = {
