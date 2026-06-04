@@ -1,0 +1,33 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #07070d;
+  color: #aab;
+  font-family: "Courier New", monospace;
+  overflow: hidden;
+}
+#frame {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+canvas#game {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: min(98vw, calc(94vh * 256 / 240));
+  height: auto;
+  aspect-ratio: 256 / 240;
+  background: #000;
+  box-shadow: 0 0 0 3px #1a1a26, 0 0 50px rgba(0,0,0,0.9);
+  border-radius: 2px;
+}
+#hint {
+  font-size: 12px;
+  letter-spacing: 1px;
+  opacity: 0.5;
+  user-select: none;
+}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bar-Crawl</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="frame">
+  <canvas id="game" width="256" height="240"></canvas>
+  <div id="hint">Arrows / WASD to move &middot; Z confirm &middot; X cancel &middot; Enter for menu</div>
+</div>
+<!-- modules loaded in dependency order (no build step) -->
+<script src="js/input.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/world.js"></script>
+<script src="js/player.js"></script>
+<script src="js/scenes/overworld.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
