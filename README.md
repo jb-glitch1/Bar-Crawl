@@ -30,27 +30,34 @@ site, so the root is all you need.
 | Key | Action |
 | --- | --- |
 | Arrow keys / WASD | Move |
-| Z / Enter / Space | Confirm, talk, advance text |
-| X / Shift | Cancel · hop on/off your **bike** (once you find it) |
-| Enter… wait, that's confirm | (use **M / Tab / Esc**) for the **Status** menu — time, tipsiness, punch card |
+| Z / Enter / Space | Confirm · talk · pet dogs · advance text |
+| X / Shift | Cancel / back out · hop on/off your **bike** |
+| M / Tab / Esc | **Status** menu — time, tipsiness, punch card, items, cash |
+
+You start in your apartment — **walk out the door** to begin the night. An
+always-on HUD shows the **countdown clock** (top-left) and your **tipsiness**
+(top-right).
 
 ## The night
 
-- **Time** runs continuously from 5 PM to 2 AM (~20 real minutes for a full
-  night). It isn't shown by default — check the **Status** menu (M).
-- **Tipsiness** rises every time you clear a bar's challenge (a celebratory
-  drink). It warps the world — the screen sways, the music muffles — and it's
-  a double-edged sword:
+- **Time** runs continuously from 5 PM to 2 AM (about an hour for a full night;
+  it starts in daylight and slides into dusk and deep night as you go).
+- **Tipsiness** rises when you **order a drink** to take on each bar's challenge.
+  It warps the world — the screen sways, the music muffles, hidden things appear
+  — and it's a double-edged sword:
   - **Floor:** some things only open up once you're a little drunk (a certain
     speakeasy, a *secret* dartboard bullseye…).
-  - **Ceiling:** hit 100% and you **black out**, get sent home, and drop an
-    item somewhere in town that you'll have to retrace next loop.
-- **Getting around:** walk anywhere, find a **bike** in the park (yours for
-  good, even in the parks), or rent a **scooter** (fast on streets, battery
-  always insultingly low, banned from parks).
-- **The loop:** reach 2 AM or black out and the night resets — but you keep
-  what you learned (passwords, the map, where the bike is) and your items, so
-  each run you go further. Clear the whole punch card before last call to win.
+  - **Ceiling:** hit 100% and you **black out**, get sent home, and drop an item
+    somewhere in town to retrace next loop.
+  - **Sober up:** eat at the midnight diner, or buy an **energy drink** (and a
+    speed boost) at the corner store with your nightly cash.
+- **Getting around:** walk anywhere, find a **bike** in the park (yours for good,
+  parks included), or rent a **scooter** (fast on streets, battery always
+  insultingly low, banned from parks). Townsfolk wander and there are dogs to pet.
+- **Challenges** are replayable once stamped, and each keeps a **high score**.
+- **The loop:** reach 2 AM or black out and the night resets — but you keep what
+  you learned (passwords, the map, where the bike is) and your items, so each run
+  you go further. Clear the whole punch card before last call to win.
 
 ## The crawl (12 stamps)
 
