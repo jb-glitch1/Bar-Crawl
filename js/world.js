@@ -4,14 +4,16 @@
 
   const T = {
     FLOOR: 0, WALL: 1, RUG: 2, DOOR: 3, GRASS: 4, ROAD: 5,
-    SIDEWALK: 6, BUILDING: 7, TREE: 8, WATER: 9, COUNTER: 10
+    SIDEWALK: 6, BUILDING: 7, TREE: 8, WATER: 9, COUNTER: 10,
+    PATH: 11, FENCE: 12, HEDGE: 13
   };
-  const SOLID = new Set([T.WALL, T.BUILDING, T.TREE, T.WATER, T.COUNTER]);
+  const SOLID = new Set([T.WALL, T.BUILDING, T.TREE, T.WATER, T.COUNTER, T.FENCE, T.HEDGE]);
 
   const LEGEND = {
     '#': T.WALL, '.': T.FLOOR, ',': T.RUG, 'D': T.DOOR, 'd': T.DOOR, 'X': T.DOOR,
     'B': T.BUILDING, 'S': T.SIDEWALK, 'R': T.ROAD, 'g': T.GRASS,
-    'T': T.TREE, '~': T.WATER, 'C': T.COUNTER, '@': T.FLOOR
+    'T': T.TREE, '~': T.WATER, 'C': T.COUNTER, '@': T.GRASS,
+    'p': T.PATH, 'r': T.ROAD, 'f': T.FENCE, 'h': T.HEDGE
   };
 
   function hash(tx, ty) {
@@ -59,6 +61,23 @@
         gfx(ctx, x, y, '#a9a59c', 1, 16);
         if (h % 9 === 0) gfx(ctx, x + 4, y + 5, '#9a968d', 8, 6);   // grate
         if (h % 13 === 0) gfx(ctx, x + (h % 9) + 2, y + (h % 9) + 2, '#a8a49b', 2, 2);
+        break;
+      case T.PATH:
+        gfx(ctx, x, y, '#cbb78a');
+        if (h % 3 === 0) gfx(ctx, x + (h % 12), y + (h % 11), '#bda878', 2, 1);
+        if (h % 7 === 0) gfx(ctx, x + (h % 10), y + (h % 9), '#d8c79c', 2, 1);
+        break;
+      case T.FENCE:
+        gfx(ctx, x, y, '#5aa45f');
+        gfx(ctx, x, y + 6, '#7a5630', 16, 2);
+        gfx(ctx, x + 1, y + 2, '#8a6238', 2, 10);
+        gfx(ctx, x + 7, y + 2, '#8a6238', 2, 10);
+        gfx(ctx, x + 13, y + 2, '#8a6238', 2, 10);
+        break;
+      case T.HEDGE:
+        gfx(ctx, x, y, '#2f7a3f');
+        gfx(ctx, x + 1, y + 1, '#3c9050', 14, 13);
+        if (h % 2 === 0) gfx(ctx, x + (h % 11) + 1, y + (h % 10) + 1, '#4aa85e', 2, 2);
         break;
       case T.BUILDING: {
         const f = FACADES[hash(Math.floor(tx / 7), Math.floor(ty / 5)) % FACADES.length];
@@ -141,128 +160,146 @@
     return { name, w, h, tiles, doors, spawn, exitDoor, meta: opts.meta || { interactions: {}, props: [], signs: [] } };
   }
 
-  // ---- town layout -------------------------------------------------------
-  function setc(s, i, c) { return s.substring(0, i) + c + s.substring(i + 1); }
+  // ---- town layout (spread-out, Pokemon-style lots) ----------------------
+  // themed building exteriors, keyed by bar id
+  const EXT = {
+    tipsy_newt: { wall: '#8a6a4a', roof: '#3a6a4a', door: '#5a3a20', decor: 'lantern', sign: 'THE TIPSY NEWT' },
+    hail_mary: { wall: '#6a7a9a', roof: '#33425e', door: '#2a3a5a', decor: 'pennant', sign: 'THE HAIL MARY' },
+    off_key_west: { wall: '#1f9a9a', roof: '#e0a040', door: '#0a5a5a', decor: 'neon', sign: 'OFF-KEY WEST' },
+    pour_decisions: { wall: '#7a3040', roof: '#3a1828', door: '#2a1018', decor: 'awning', sign: 'POUR DECISIONS' },
+    sticky_floor: { wall: '#5a5a52', roof: '#3a3a34', door: '#222', decor: 'neon', sign: 'THE STICKY FLOOR' },
+    cellar_door: { wall: '#80808c', roof: '#565662', door: '#3a2a1a', decor: 'stone', sign: 'THE CELLAR DOOR' },
+    witz_end: { wall: '#3a3a6a', roof: '#26264a', door: '#1a1a3a', decor: 'column', sign: 'WITZ END' },
+    reggies: { wall: '#9a9a8a', roof: '#6a6a5a', door: '#5a5a4a', decor: 'fridge', sign: "REGGIE'S FRIDGES" },
+    sleigh: { wall: '#aa3030', roof: '#2a7a3a', door: '#6a1818', decor: 'snow', sign: "SLEIGH IT AIN'T SO" },
+    sobering_thoughts: { wall: '#c4c4cc', roof: '#d04040', door: '#444', decor: 'diner', sign: 'SOBERING THOUGHTS' },
+    deja_brew: { wall: '#6a4a7a', roof: '#3a2450', door: '#2a163a', decor: 'spiral', sign: 'DEJA BREW' },
+    home: { wall: '#c6ac7a', roof: '#8a5a4a', door: '#5a3a20', decor: 'home', sign: 'HOME' },
+    store: { wall: '#e2e2ea', roof: '#2a9a5a', door: '#2a7a4a', decor: 'neon', sign: 'CORNER STORE' }
+  };
 
-  // plus-shaped street block: walkable bands at cols 7-8 (vertical) and rows 7-8 (horizontal),
-  // plus sidewalk bands, with buildings filling the quadrants. Edges align across screens.
-  function street(opts) {
-    opts = opts || {};
-    const rows = [
-      'BBBBBBBSSBBBBBBB',
-      'BBBBBBBSSBBBBBBB',
-      'BBBBBBBSSBBBBBBB',
-      'SSSSSSSSSSSSSSSS',
-      'SSSSSSSSSSSSSSSS',
-      'BBBBBBBSSBBBBBBB',
-      'BBBBBBBSSBBBBBBB',
-      'RRRRRRRRRRRRRRRR',
-      'RRRRRRRRRRRRRRRR',
-      'BBBBBBBSSBBBBBBB',
-      'BBBBBBBSSBBBBBBB',
-      'SSSSSSSSSSSSSSSS',
-      'SSSSSSSSSSSSSSSS',
-      'BBBBBBBSSBBBBBBB',
-      'BBBBBBBSSBBBBBBB'
-    ];
-    (opts.doors || []).forEach(d => { rows[d.ty] = setc(rows[d.ty], d.tx, 'D'); });
-    if (opts.spawn) rows[opts.spawn.ty] = setc(rows[opts.spawn.ty], opts.spawn.tx, '@');
-    return rows;
+  function blankGrid() { const g = []; for (let y = 0; y < 15; y++) g.push('gggggggggggggggg'.split('')); return g; }
+  function gridRows(g) { return g.map(r => r.join('')); }
+  function bldRect(q) {
+    switch (q) {
+      case 'TL': return { x: 1, y: 2, w: 5, h: 3, dx: 3, dy: 4, dir: 'down' };
+      case 'TR': return { x: 10, y: 2, w: 5, h: 3, dx: 12, dy: 4, dir: 'down' };
+      case 'BL': return { x: 1, y: 10, w: 5, h: 3, dx: 3, dy: 10, dir: 'up' };
+      case 'BR': return { x: 10, y: 10, w: 5, h: 3, dx: 12, dy: 10, dir: 'up' };
+    }
   }
 
-  function park() {
-    return [
-      'gggggggggggggggg',
-      'ggTTgggggggTTggg',
-      'gggggggggggggggg',
-      'ggggg~~~~~~ggggg',
-      'gggg~~~~~~~~gggg',
-      'gggg~~~~~~~~gggg',
-      'ggggg~~~~~~ggggg',
-      'gggggggggggggggg',
-      'ggTggggggggggTgg',
-      'gggggggggggggggg',
-      'gggggggggggggggg',
-      'gggTTgggggTTgggg',
-      'gggggggggggggggg',
-      'gggggggggggggggg',
-      'gggggggggggggggg'
-    ];
+  // build an open lot: grass + a plus path/road, tree borders with openings only
+  // where a neighbor screen exists, themed buildings in the quadrants.
+  function lot(opts) {
+    const g = blankGrid();
+    const E = opts.exits || {};
+    // central junction, then roads/paths extend ONLY toward real exits (no dead ends)
+    for (let x = 6; x <= 9; x++) { g[7][x] = 'r'; g[8][x] = 'r'; }
+    for (let y = 6; y <= 9; y++) { if (g[y][7] !== 'r') { g[y][7] = 'p'; g[y][8] = 'p'; } }
+    if (E.up) for (let y = 0; y < 6; y++) { g[y][7] = 'p'; g[y][8] = 'p'; }
+    if (E.down) for (let y = 10; y < 15; y++) { g[y][7] = 'p'; g[y][8] = 'p'; }
+    if (E.left) for (let x = 0; x < 6; x++) { g[7][x] = 'r'; g[8][x] = 'r'; }
+    if (E.right) for (let x = 10; x < 16; x++) { g[7][x] = 'r'; g[8][x] = 'r'; }
+    // tree border everywhere except the exit openings (physical block on dead ends)
+    for (let x = 0; x < 16; x++) { g[0][x] = (E.up && (x === 7 || x === 8)) ? 'p' : 'T'; g[14][x] = (E.down && (x === 7 || x === 8)) ? 'p' : 'T'; }
+    for (let y = 0; y < 15; y++) { g[y][0] = (E.left && (y === 7 || y === 8)) ? 'r' : 'T'; g[y][15] = (E.right && (y === 7 || y === 8)) ? 'r' : 'T'; }
+    const builds = [];
+    (opts.buildings || []).forEach(b => {
+      const r = bldRect(b.quad);
+      for (let yy = r.y; yy < r.y + r.h; yy++) for (let xx = r.x; xx < r.x + r.w; xx++) g[yy][xx] = 'B';
+      g[r.dy][r.dx] = 'D';
+      if (r.dir === 'down') { for (let yy = r.dy + 1; yy <= 6; yy++) g[yy][r.dx] = 'p'; }
+      else { for (let yy = 9; yy < r.dy; yy++) g[yy][r.dx] = 'p'; }
+      builds.push(Object.assign({ id: b.id }, r));
+    });
+    (opts.water || []).forEach(([x, y]) => { if (g[y][x] === 'g') g[y][x] = '~'; });
+    (opts.trees || []).forEach(([x, y]) => { if (g[y][x] === 'g') g[y][x] = 'T'; });
+    if (opts.spawn) g[opts.spawn[1]][opts.spawn[0]] = '@';
+    return { rows: gridRows(g), builds };
   }
 
-  function wireBar(s, tx, ty, id, sign) {
-    s.meta.interactions[tx + ',' + ty] = () => BC.enterBar(id);
-    s.meta.signs.push({ tx, ty, text: sign });
+  function cornerStore(g) {
+    BC.ui.choose('CORNER STORE   (you have $' + g.run.cash + ')', [
+      'Energy Drink - $4  (sober up + get wired)',
+      'Bottled Water - $1  (a small sober-up)',
+      'Leave'
+    ], (i) => {
+      if (i === 0) {
+        if (g.run.cash >= 4) { g.run.cash -= 4; g.eat(24); g.run.energized = 10; BC.ui.toast('ZAP! Wired and a little less drunk.', { good: true }); BC.audio && BC.audio.sfx('confirm'); }
+        else BC.ui.toast('"No cash, no caffeine, pal."');
+      } else if (i === 1) {
+        if (g.run.cash >= 1) { g.run.cash -= 1; g.eat(10); BC.ui.toast('Hydration. Responsible of you.'); BC.audio && BC.audio.sfx('confirm'); }
+        else BC.ui.toast('"That one\'s not free either, pal."');
+      }
+    });
+  }
+
+  function speakeasyGate(g) {
+    if (g.tipsyTier() < 1) { BC.ui.toast('"Reggie\'s Reliable Refrigeration." Closed. Smells of freon and secrets.'); return; }
+    if (!g.knows('password')) { BC.ui.say(['A slot slides open. "Password?"', '...you\'ve got nothing. Maybe somebody tipsy knows it.'], { speaker: 'The Slot' }); return; }
+    BC.enterBar('speakeasy');
   }
   function addScooter(s, tx, ty) {
     s.meta.props.push({ tx, ty, type: 'scooter' });
-    s.meta.interactions[tx + ',' + ty] = (g) => {
-      g.rentScooter();
-      BC.ui.toast('Scooter unlocked: ' + g.run.scooterPct + '% battery (yikes).');
-      BC.audio && BC.audio.sfx('confirm');
-    };
+    s.meta.interactions[tx + ',' + ty] = (g) => { g.rentScooter(); BC.ui.toast('Scooter unlocked: ' + g.run.scooterPct + '% battery (yikes).'); BC.audio && BC.audio.sfx('confirm'); };
   }
   function addBike(s, tx, ty) {
     s.meta.props.push({ tx, ty, type: 'bike' });
     s.meta.interactions[tx + ',' + ty] = (g) => {
-      if (!g.hasItem('bike')) {
-        g.giveItem('bike');
-        BC.ui.toast('A free bike! Yours for good now. (Press X to ride.)', { good: true });
-        BC.audio && BC.audio.sfx('stamp');
-      } else {
-        BC.ui.toast('An empty bike rack. You already have a bike.');
-      }
+      if (!g.hasItem('bike')) { g.giveItem('bike'); BC.ui.toast('A free bike! Yours for good now. (Press X to ride.)', { good: true }); BC.audio && BC.audio.sfx('stamp'); }
+      else BC.ui.toast('An empty bike rack. You already have a bike.');
     };
   }
 
-  function wireSpeakeasy(s, tx, ty) {
-    s.meta.signs.push({ tx, ty, text: "REGGIE'S FRIDGES" });
-    s.meta.interactions[tx + ',' + ty] = (g) => {
-      if (g.tipsyTier() < 1) { BC.ui.toast('"Reggie\'s Reliable Refrigeration." Dark. Smells of freon and secrets.'); return; }
-      if (!g.knows('password')) { BC.ui.say(['A slot slides open at eye level. "Password?"', '...you\'ve got nothing. Maybe somebody tipsy knows it.'], { speaker: 'The Slot' }); return; }
-      BC.enterBar('speakeasy');
-    };
+  function makeScreen(S, key, name, opts) {
+    const { rows, builds } = lot(opts);
+    const E = opts.exits || {};
+    const s = fromAscii(name, rows, { spawnTile: T.GRASS, meta: { interactions: {}, props: [], signs: [], buildings: [], actors: opts.actors || [], park: !!opts.park, throughRoad: !!(E.left && E.right) } });
+    builds.forEach(b => {
+      const ext = EXT[b.id] || EXT.home;
+      s.meta.buildings.push({ x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
+      const key2 = b.dx + ',' + b.dy;
+      if (b.id === 'reggies') s.meta.interactions[key2] = speakeasyGate;
+      else if (b.id === 'store') s.meta.interactions[key2] = cornerStore;
+      else if (b.id === 'home') s.meta.interactions[key2] = () => BC.ui.toast("Your place. The night's still young.");
+      else s.meta.interactions[key2] = () => BC.enterBar(b.id);
+    });
+    S[key] = s;
+    return s;
   }
 
   function buildTown(world) {
     const S = world.screens;
-    // Row 0 — uptown / early tier
-    S['0,0'] = fromAscii('Maple Street', street({ doors: [{ tx: 3, ty: 2 }], spawn: { tx: 8, ty: 4 } }), { spawnTile: T.SIDEWALK });
-    wireBar(S['0,0'], 3, 2, 'tipsy_newt', 'THE TIPSY NEWT');
+    const X = (u, d, l, r) => ({ up: u, down: d, left: l, right: r });
 
-    S['1,0'] = fromAscii('Downtown', street({ doors: [{ tx: 3, ty: 2 }] }));
-    wireBar(S['1,0'], 3, 2, 'hail_mary', 'THE HAIL MARY');
-    addScooter(S['1,0'], 11, 3);
+    makeScreen(S, '0,0', 'Maple Street', { exits: X(0, 1, 0, 1), spawn: [4, 11], buildings: [{ quad: 'TL', id: 'tipsy_newt' }, { quad: 'TR', id: 'home' }], trees: [[2, 12], [13, 12]], actors: [
+      { x: 168, y: 198, type: 'person', colors: { shirt: '#2a6ad0' }, name: 'Neighbor', lines: ['Big night ahead? The bars close at 2 AM sharp.', 'Pace yourself. ...Or don\'t. Not my business.'] },
+      { x: 96, y: 206, type: 'dog', colors: { body: '#caa06a' }, name: 'Biscuit' }
+    ] });
+    makeScreen(S, '1,0', 'Downtown', { exits: X(0, 1, 1, 1), buildings: [{ quad: 'TL', id: 'hail_mary' }, { quad: 'TR', id: 'store' }] });
+    addScooter(S['1,0'], 6, 11);
+    makeScreen(S, '2,0', 'The Strip', { exits: X(0, 1, 1, 0), buildings: [{ quad: 'TL', id: 'off_key_west' }, { quad: 'TR', id: 'pour_decisions' }] });
 
-    S['2,0'] = fromAscii('The Strip', street({ doors: [{ tx: 3, ty: 2 }, { tx: 12, ty: 2 }] }));
-    wireBar(S['2,0'], 3, 2, 'off_key_west', 'OFF-KEY WEST');
-    wireBar(S['2,0'], 12, 2, 'pour_decisions', 'POUR DECISIONS');
+    makeScreen(S, '0,1', 'Riverside Park', { exits: X(1, 1, 0, 1), park: true, water: [[10, 10], [11, 10], [12, 10], [10, 11], [11, 11], [12, 11], [11, 12]], trees: [[2, 2], [4, 2], [13, 2], [2, 11], [13, 12]], actors: [
+      { x: 64, y: 40, type: 'person', colors: { shirt: '#3a9d5a' }, name: 'Jogger', lines: ['On your left! ...Sorry. Force of habit.'] },
+      { x: 120, y: 200, type: 'dog', colors: { body: '#5a5a5a' }, name: 'Rex' },
+      { x: 200, y: 56, type: 'dog', colors: { body: '#e0c89a', dark: '#b89a6a' }, name: 'Daisy' }
+    ] });
+    addBike(S['0,1'], 4, 11);
+    makeScreen(S, '1,1', 'Old Town', { exits: X(1, 1, 1, 1), buildings: [{ quad: 'TL', id: 'sticky_floor' }, { quad: 'TR', id: 'cellar_door' }] });
+    makeScreen(S, '2,1', 'Backstreets', { exits: X(1, 1, 1, 0), buildings: [{ quad: 'TL', id: 'witz_end' }, { quad: 'TR', id: 'reggies' }] });
 
-    // Row 1 — midtown / weird tier
-    S['0,1'] = fromAscii('Riverside Park', park(), { meta: { interactions: {}, props: [], signs: [], park: true } });
-    addBike(S['0,1'], 8, 10);
-
-    S['1,1'] = fromAscii('Old Town', street({ doors: [{ tx: 3, ty: 2 }, { tx: 12, ty: 2 }] }));
-    wireBar(S['1,1'], 3, 2, 'sticky_floor', 'THE STICKY FLOOR');
-    wireBar(S['1,1'], 12, 2, 'cellar_door', 'THE CELLAR DOOR');
-
-    S['2,1'] = fromAscii('Backstreets', street({ doors: [{ tx: 3, ty: 2 }, { tx: 12, ty: 2 }] }));
-    wireBar(S['2,1'], 3, 2, 'witz_end', 'WITZ END');
-    wireSpeakeasy(S['2,1'], 12, 2);
-
-    // Row 2 — downtown / bespoke-strange tier
-    S['0,2'] = fromAscii('Frostgate', street({ doors: [{ tx: 3, ty: 2 }] }));
-    wireBar(S['0,2'], 3, 2, 'sleigh', "SLEIGH IT AIN'T SO");
-
-    S['1,2'] = fromAscii('Night Market', street({ doors: [{ tx: 3, ty: 2 }] }));
-    wireBar(S['1,2'], 3, 2, 'sobering_thoughts', 'SOBERING THOUGHTS');
-
-    S['2,2'] = fromAscii('The Fringe', street({ doors: [{ tx: 3, ty: 2 }] }));
-    wireBar(S['2,2'], 3, 2, 'deja_brew', 'DEJA BREW');
+    makeScreen(S, '0,2', 'Frostgate', { exits: X(1, 0, 0, 1), buildings: [{ quad: 'TL', id: 'sleigh' }], trees: [[11, 3], [13, 4], [11, 11]] });
+    makeScreen(S, '1,2', 'Night Market', { exits: X(1, 0, 1, 1), buildings: [{ quad: 'TL', id: 'sobering_thoughts' }] });
+    makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
+      { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.'] },
+      { x: 110, y: 56, type: 'dog', colors: { body: '#8a8a8a' }, name: 'Echo' }
+    ] });
   }
 
   const world = {
-    T, SOLID, fromAscii, drawTile, buildTown,
+    T, SOLID, fromAscii, drawTile, buildTown, nightFactor, EXT,
     screens: {},
     startKey: '0,0',
     _built: false,

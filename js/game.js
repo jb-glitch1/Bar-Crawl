@@ -60,9 +60,11 @@
       this.run = {
         minutes: 0,
         tipsy: 0,
-        vehicle: this.hasItem('bike') ? 'walk' : 'walk',
+        vehicle: 'walk',
         battery: 0,
         scooterPct: 0,
+        cash: 25,         // nightly budget (corner store energy drinks)
+        energized: 0,     // seconds of caffeine speed boost
         stamps: {},
         flags: {},        // per-run scratch (npc states, quest progress)
         ended: false,
@@ -80,6 +82,7 @@
       if (this.run.tipsy > 0) {
         this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerSec * dt);
       }
+      if (this.run.energized > 0) this.run.energized -= dt;
       this._updateMood();
       if (BC.audio) BC.audio.update(this.run.tipsy);
       if (this.allStamps()) { this.endNight('complete'); return; }
@@ -123,7 +126,7 @@
     },
 
     // ---- traversal ----
-    speedMult() { return (VEHICLE[this.run.vehicle] || VEHICLE.walk).mult; },
+    speedMult() { return (VEHICLE[this.run.vehicle] || VEHICLE.walk).mult * (this.run.energized > 0 ? 1.22 : 1); },
     setVehicle(v) { this.run.vehicle = v; },
     rentScooter() {
       this.run.vehicle = 'scooter';

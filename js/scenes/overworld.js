@@ -43,6 +43,7 @@
 
       player.update(dt, screen);
       const g = BC.game;
+      updateAmbient(dt, screen);
 
       // scooter battery drains embarrassingly fast; parks reject it outright
       g.drainScooter(dt, player.moving);
@@ -95,12 +96,16 @@
         else if (trans.dir === 'down') { fy = -H * e; ty = H - H * e; }
         else if (trans.dir === 'up') { fy = H * e; ty = -H + H * e; }
         BC.world.draw(ctx, BC.world.screens[trans.fromKey], fx, fy);
+        drawBuildings(ctx, BC.world.screens[trans.fromKey], fx, fy);
         BC.world.draw(ctx, BC.world.screens[trans.toKey], tx, ty);
+        drawBuildings(ctx, BC.world.screens[trans.toKey], tx, ty);
         drawRider(ctx, trans.px - 8 + tx, trans.py - 16 + ty, player.dir, 0);
       } else {
         BC.world.draw(ctx, screen, 0, 0);
+        drawBuildings(ctx, screen, 0, 0);
         drawProps(ctx, screen, 0, 0);
-        drawRider(ctx, player.x - 8, player.y - 16, player.dir, player.frame);
+        drawCars(ctx, screen, 0, 0);
+        drawEntities(ctx, screen);
         drawSigns(ctx, screen, 0, 0);
       }
       // location label (top-center, between the HUD panels)
@@ -129,13 +134,28 @@
   }
 
   function interactFront() {
+    // people + dogs first (by proximity to the tile in front)
+    let fx = player.x, fy = player.y - 2; const d = player.dir;
+    if (d === 'left') fx -= 12; else if (d === 'right') fx += 12; else if (d === 'up') fy -= 12; else fy += 8;
+    let best = null, bd = 1e9;
+    for (const a of (screen.meta.actors || [])) { const dd = Math.hypot(a.x - fx, a.y - fy); if (dd < bd) { bd = dd; best = a; } }
+    if (best && bd < 18) { talkActor(best); return; }
+
     const f = frontTile();
-    const key = f.tx + ',' + f.ty;
-    const inter = screen.meta && screen.meta.interactions && screen.meta.interactions[key];
+    const inter = screen.meta && screen.meta.interactions && screen.meta.interactions[f.tx + ',' + f.ty];
     if (inter) { inter(BC.game, { screenKey, tx: f.tx, ty: f.ty }); return; }
-    // doors with no handler yet
     const t = screen.tiles[f.ty * screen.w + f.tx];
     if (t === BC.world.T.DOOR) BC.ui.toast("It's locked. (For now.)");
+  }
+
+  function talkActor(a) {
+    if (a.type === 'dog') {
+      BC.ui.toast('You pet ' + (a.name || 'the dog') + '. Good dog!', { good: true });
+      BC.audio && BC.audio.sfx('confirm');
+      a.t = 0.3; a.mvx = 0; a.mvy = 0;
+    } else {
+      BC.ui.say(a.lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
+    }
   }
 
   function cycleVehicle() {
@@ -206,6 +226,107 @@
       const w = s.text.length * 4 + 6;
       BC.rect(ctx, cx - w / 2, ty, w, 9, 'rgba(10,10,20,0.85)');
       BC.text(ctx, s.text, cx, ty + 1, { color: '#ffe27a', size: 7, align: 'center', shadow: false });
+    }
+  }
+
+  function drawBuildings(ctx, scr, ox, oy) {
+    const bs = scr.meta && scr.meta.buildings; if (!bs) return;
+    for (const b of bs) drawBuilding(ctx, b, ox, oy);
+  }
+
+  function drawBuilding(ctx, b, ox, oy) {
+    const R = (x, y, w, h, c) => BC.rect(ctx, x, y, w, h, c);
+    const px = ox + b.x * 16, py = oy + b.y * 16, W = b.w * 16, H = b.h * 16, ext = b.ext;
+    R(px + 2, py + H - 1, W, 3, 'rgba(0,0,0,0.18)');         // ground shadow
+    R(px, py + 10, W, H - 10, ext.wall);                     // wall
+    R(px, py + 10, W, 2, 'rgba(255,255,255,0.10)');
+    R(px, py + H - 3, W, 3, 'rgba(0,0,0,0.22)');
+    R(px, py + 10, 2, H - 10, 'rgba(0,0,0,0.10)');
+    R(px + W - 2, py + 10, 2, H - 10, 'rgba(0,0,0,0.18)');
+    R(px - 3, py - 2, W + 6, 13, ext.roof);                  // roof overhang
+    R(px - 3, py - 2, W + 6, 3, 'rgba(255,255,255,0.16)');
+    R(px - 3, py + 9, W + 6, 2, 'rgba(0,0,0,0.25)');
+    const nf = BC.world.nightFactor();
+    [px + 5, px + W - 13].forEach((wx, i) => {               // windows
+      const lit = nf > 0.4 || i === 1;
+      R(wx, py + 15, 8, 7, lit ? '#ffe27a' : '#bfe0ee');
+      R(wx, py + 15, 8, 1, 'rgba(0,0,0,0.4)'); R(wx + 3, py + 15, 1, 7, 'rgba(0,0,0,0.3)');
+    });
+    const dW = 12, dH = 15, dX = px + W / 2 - dW / 2, dY = (b.dir === 'down') ? py + H - dH : py + 10;
+    R(dX - 1, dY - 1, dW + 2, dH + 1, '#2a1c10');            // door
+    R(dX, dY, dW, dH, ext.door);
+    R(dX, dY, dW, 2, 'rgba(255,255,255,0.12)');
+    R(dX + dW - 3, dY + dH / 2, 2, 2, '#e8d27a');
+    const sw = ext.sign.length * 4 + 8, scx = px + W / 2;    // sign
+    R(scx - sw / 2, py - 11, sw, 9, 'rgba(8,8,16,0.92)');
+    R(scx - sw / 2, py - 11, sw, 1, ext.roof);
+    BC.text(ctx, ext.sign, scx, py - 10, { size: 7, align: 'center', color: '#ffe27a', shadow: false });
+    drawDecor(ctx, ext.decor, px, py, W, H);
+  }
+
+  function drawDecor(ctx, d, x, y, W, H) {
+    const R = (a, b, c, e, f) => BC.rect(ctx, a, b, c, e, f);
+    if (d === 'snow') {
+      R(x - 4, y - 4, W + 8, 5, '#eef5ff'); R(x - 4, y + 1, W + 8, 1, '#dfeaf5');
+      const lc = ['#ff5a5a', '#ffe27a', '#7ed07e', '#7ad0ff'];
+      for (let i = 0; i < W; i += 7) R(x + i, y + 9, 2, 2, lc[(i / 7) % 4 | 0]);
+    } else if (d === 'neon') { R(x + 2, y + 12, W - 4, 2, '#ff5ab0'); R(x + 2, y + 12, W - 4, 1, '#ffd0ec'); }
+    else if (d === 'pennant') { const pc = ['#ff5a5a', '#5a9aff', '#ffe27a']; for (let i = 0; i < W; i += 8) { R(x + i, y - 2, 6, 3, pc[(i / 8) % 3 | 0]); } }
+    else if (d === 'awning') { for (let i = 0; i < W; i += 6) { R(x + i, y + 10, 3, 4, '#dcd4c4'); R(x + i + 3, y + 10, 3, 4, '#7a3040'); } }
+    else if (d === 'stone') { for (let r = 0; r < 3; r++) for (let cc = 0; cc < W - 4; cc += 11) R(x + cc + (r % 2 ? 5 : 0), y + 14 + r * 5, 9, 4, 'rgba(0,0,0,0.10)'); }
+    else if (d === 'column') { R(x + 3, y + 11, 3, H - 13, '#cfd2dd'); R(x + W - 6, y + 11, 3, H - 13, '#cfd2dd'); }
+    else if (d === 'fridge') { R(x + 5, y + 15, 8, 9, '#e8e8ee'); R(x + 11, y + 18, 1, 3, '#888'); }
+    else if (d === 'diner') { R(x + 2, y + 9, W - 4, 2, '#9adfff'); R(x + W / 2 - 9, y - 10, 18, 7, '#222'); BC.text(ctx, 'EAT', x + W / 2, y - 9, { size: 7, align: 'center', color: '#ff6b6b', shadow: false }); }
+    else if (d === 'spiral') { R(x + W / 2 - 4, y + 14, 8, 8, '#1a0e26'); R(x + W / 2 - 2, y + 16, 4, 4, '#b07ad0'); R(x + W / 2 - 1, y + 17, 2, 2, '#1a0e26'); }
+    else if (d === 'home') { R(x + W / 2 - 5, y + H - 2, 10, 2, '#7a4a3a'); R(x + 2, y + H - 7, 3, 5, '#3a7d44'); }
+    else if (d === 'lantern') { R(x + W - 5, y + 12, 3, 4, '#ffe27a'); R(x + W - 5, y + 11, 3, 1, '#222'); }
+  }
+
+  function drawCars(ctx, scr, ox, oy) {
+    for (const c of (scr.meta.cars || [])) BC.gfx.car(ctx, ox + c.x, oy + c.y, c.dir, c.color);
+  }
+
+  function drawEntities(ctx, scr) {
+    const list = [{ y: player.y, player: true }];
+    for (const a of (scr.meta.actors || [])) list.push({ y: a.y, a });
+    list.sort((p, q) => p.y - q.y);
+    for (const e of list) {
+      if (e.player) drawRider(ctx, player.x - 8, player.y - 16, player.dir, player.frame);
+      else if (e.a.type === 'dog') BC.gfx.dog(ctx, e.a.x - 8, e.a.y - 16, e.a.dir, e.a.frame, e.a.colors);
+      else BC.gfx.actor(ctx, e.a.x - 8, e.a.y - 16, e.a.dir, e.a.frame, e.a.colors);
+    }
+  }
+
+  function initAmbient(scr) {
+    if (scr._amb) return;
+    scr._amb = true;
+    const colors = ['#d24', '#39c', '#7a7', '#ca5', '#849', '#c84'];
+    scr.meta.cars = (!scr.meta.throughRoad || scr.meta.park) ? [] : [
+      { x: -50 - Math.random() * 140, y: 109, dir: 'right', color: colors[(Math.random() * colors.length) | 0], speed: 26 + Math.random() * 16 },
+      { x: BC.W + 30 + Math.random() * 140, y: 121, dir: 'left', color: colors[(Math.random() * colors.length) | 0], speed: 24 + Math.random() * 16 }
+    ];
+    (scr.meta.actors || []).forEach(a => { a.t = Math.random() * 2; a.dir = a.dir || 'down'; a.frame = 0; a.hx = a.x; a.hy = a.y; a.mvx = 0; a.mvy = 0; a.anim = 0; });
+  }
+
+  function updateAmbient(dt, scr) {
+    initAmbient(scr);
+    for (const c of scr.meta.cars) {
+      c.x += (c.dir === 'right' ? 1 : -1) * c.speed * dt;
+      if (c.dir === 'right' && c.x > BC.W + 30) c.x = -54;
+      if (c.dir === 'left' && c.x < -54) c.x = BC.W + 30;
+    }
+    for (const a of (scr.meta.actors || [])) {
+      a.t -= dt;
+      if (a.t <= 0) {
+        a.t = 0.8 + Math.random() * 2.2;
+        if (Math.random() < 0.4) { a.mvx = 0; a.mvy = 0; }
+        else { const D = [[1, 0, 'right'], [-1, 0, 'left'], [0, 1, 'down'], [0, -1, 'up']][(Math.random() * 4) | 0]; a.mvx = D[0]; a.mvy = D[1]; a.dir = D[2]; }
+      }
+      const sp = a.type === 'dog' ? 24 : 15;
+      const nx = a.x + a.mvx * sp * dt, ny = a.y + a.mvy * sp * dt;
+      if (Math.hypot(nx - a.hx, ny - a.hy) < 36 && !BC.solidBox(scr, { x: nx - 4, y: ny - 4, w: 8, h: 6 })) { a.x = nx; a.y = ny; }
+      else { a.mvx = 0; a.mvy = 0; }
+      if (a.mvx || a.mvy) { a.anim += dt * 6; a.frame = (a.anim | 0) & 1; } else a.frame = 0;
     }
   }
 

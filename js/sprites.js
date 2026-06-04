@@ -94,5 +94,39 @@
     }
   };
 
+  // a small dog you can pet
+  gfx.dog = function (ctx, x, y, dir, frame, col) {
+    const body = (col && col.body) || '#9a6a3a', dark = (col && col.dark) || '#6a4a26';
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath(); ctx.ellipse(x + 8, y + 15, 5, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+    const f = (frame | 0) & 1;
+    px(ctx, x + 3, y + 8, 9, 4, body);                 // body
+    px(ctx, x + 4, y + 12, 2, 3 - f, dark);            // legs (tiny trot)
+    px(ctx, x + 9, y + 12, 2, 2 + f, dark);
+    if (dir === 'left') {
+      px(ctx, x + 1, y + 6, 4, 5, body); px(ctx, x + 1, y + 5, 2, 2, dark); px(ctx, x + 1, y + 8, 1, 1, '#1a1a1a'); px(ctx, x + 12, y + 8, 3, 1, body);
+    } else if (dir === 'right') {
+      px(ctx, x + 11, y + 6, 4, 5, body); px(ctx, x + 13, y + 5, 2, 2, dark); px(ctx, x + 14, y + 8, 1, 1, '#1a1a1a'); px(ctx, x + 1, y + 8, 3, 1, body);
+    } else {
+      px(ctx, x + 5, y + 5, 6, 5, body); px(ctx, x + 5, y + 4, 2, 2, dark); px(ctx, x + 9, y + 4, 2, 2, dark);
+      px(ctx, x + 6, y + 7, 1, 1, '#1a1a1a'); px(ctx, x + 9, y + 7, 1, 1, '#1a1a1a'); px(ctx, x + 7, y + 9, 2, 1, '#1a1a1a');
+    }
+  };
+
+  // a top-down car
+  gfx.car = function (ctx, x, y, dir, color) {
+    const c = color || '#c33', dk = 'rgba(0,0,0,0.5)', glass = '#bfe0ee';
+    px(ctx, x + 1, y + 12, 22, 2, 'rgba(0,0,0,0.25)'); // shadow
+    px(ctx, x, y + 2, 24, 9, c);
+    px(ctx, x + 2, y + 1, 20, 1, c);
+    px(ctx, x, y + 2, 24, 1, 'rgba(255,255,255,0.18)');
+    px(ctx, x + 5, y + 3, 14, 3, glass);               // windows
+    px(ctx, x + 11, y + 3, 1, 3, '#5a8fb0');
+    px(ctx, x + 3, y + 10, 5, 2, '#1a1a1a'); px(ctx, x + 16, y + 10, 5, 2, '#1a1a1a'); // wheels
+    px(ctx, x + 3, y + 1, 5, 1, '#1a1a1a'); px(ctx, x + 16, y + 1, 5, 1, '#1a1a1a');
+    if (dir === 'right') { px(ctx, x + 22, y + 3, 2, 2, '#ffe'); px(ctx, x + 22, y + 7, 2, 2, '#ffe'); }
+    else { px(ctx, x, y + 3, 2, 2, '#f88'); px(ctx, x, y + 7, 2, 2, '#f88'); }
+  };
+
   BC.gfx = gfx;
 })();
