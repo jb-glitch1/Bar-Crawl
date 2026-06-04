@@ -48,11 +48,11 @@
     } else if (dir === 'up') {
       px(ctx, x + 4, y + 2, 8, 3, C.hair);
     } else if (dir === 'left') {
-      px(ctx, x + 4, y + 2, 3, 4, C.hair);
-      px(ctx, x + 6, y + 5, 1, 1, C.eye);
+      px(ctx, x + 9, y + 2, 3, 4, C.hair);   // back of head trails on the right
+      px(ctx, x + 5, y + 5, 1, 1, C.eye);    // face/eye leads on the left
     } else if (dir === 'right') {
-      px(ctx, x + 9, y + 2, 3, 4, C.hair);
-      px(ctx, x + 9, y + 5, 1, 1, C.eye);
+      px(ctx, x + 4, y + 2, 3, 4, C.hair);   // back of head trails on the left
+      px(ctx, x + 10, y + 5, 1, 1, C.eye);   // face/eye leads on the right
     }
   };
 
@@ -84,8 +84,9 @@
       px(ctx, x + 1, y + 13, 4, 4, wheel); px(ctx, x + 11, y + 13, 4, 4, wheel);
       px(ctx, x + 2, y + 14, 2, 2, hub);   px(ctx, x + 12, y + 14, 2, 2, hub);
       px(ctx, x + 4, y + 10, 8, 2, frame); // top tube
-      px(ctx, x + 7, y + 11, 2, 3, frame); // seat post
-      px(ctx, x + 11, y + 8, 2, 4, frame); // handlebars
+      const right = dir === 'right';
+      px(ctx, right ? x + 11 : x + 3, y + 7, 2, 5, frame); // handlebars lead the travel direction
+      px(ctx, right ? x + 5 : x + 9, y + 9, 2, 3, frame);  // seat trails behind
     } else {
       px(ctx, x + 6, y + 13, 4, 4, wheel);
       px(ctx, x + 7, y + 14, 2, 2, hub);

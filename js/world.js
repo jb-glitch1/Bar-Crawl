@@ -236,10 +236,10 @@
     });
   }
 
-  function speakeasyGate(g) {
+  function speakeasyGate(g, ret) {
     if (g.tipsyTier() < 1) { BC.ui.toast('"Reggie\'s Reliable Refrigeration." Closed. Smells of freon and secrets.'); return; }
     if (!g.knows('password')) { BC.ui.say(['A slot slides open. "Password?"', '...you\'ve got nothing. Maybe somebody tipsy knows it.'], { speaker: 'The Slot' }); return; }
-    BC.enterBar('speakeasy');
+    BC.enterBar('speakeasy', ret);
   }
   function addScooter(s, tx, ty) {
     s.meta.props.push({ tx, ty, type: 'scooter' });
@@ -261,10 +261,11 @@
       const ext = EXT[b.id] || EXT.home;
       s.meta.buildings.push({ x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
       const key2 = b.dx + ',' + b.dy;
-      if (b.id === 'reggies') s.meta.interactions[key2] = speakeasyGate;
+      const ret = { key: key, tx: b.dx, ty: b.dy }; // return spot = just outside this door
+      if (b.id === 'reggies') s.meta.interactions[key2] = (g) => speakeasyGate(g, ret);
       else if (b.id === 'store') s.meta.interactions[key2] = cornerStore;
       else if (b.id === 'home') s.meta.interactions[key2] = () => BC.ui.toast("Your place. The night's still young.");
-      else s.meta.interactions[key2] = () => BC.enterBar(b.id);
+      else s.meta.interactions[key2] = () => BC.enterBar(b.id, ret);
     });
     S[key] = s;
     return s;

@@ -4,8 +4,10 @@
   const S = BC.scenes || (BC.scenes = {});
 
   // scene transitions (fade-wrapped so they feel intentional)
-  BC.enterBar = (id) => BC.ui.cutscene([
-    { fadeOut: 1, dur: 0.22 }, { do: () => BC.setScene('bar', { id }) }, { fadeIn: 0, dur: 0.22 }
+  // ret = { key, tx, ty } of the overworld door you came in through (so we can
+  // put you back just outside it). Falls back to the bar's declared door.
+  BC.enterBar = (id, ret) => BC.ui.cutscene([
+    { fadeOut: 1, dur: 0.22 }, { do: () => BC.setScene('bar', { id, ret }) }, { fadeIn: 0, dur: 0.22 }
   ]);
   BC.leaveBar = (key, px, py) => BC.ui.cutscene([
     { fadeOut: 1, dur: 0.22 }, { do: () => BC.setScene('overworld', { key, px, py, dir: 'down' }) }, { fadeIn: 0, dur: 0.22 }
@@ -43,6 +45,7 @@
       const g = BC.game;
       this.def = BC.bars[args.id];
       this.id = args.id;
+      if (args.ret) this.ret = args.ret;
       this.screen = BC.world.fromAscii(this.def.name, this.def.room);
       // place furniture (solid pieces block movement)
       this.furniture = (this.def.furniture || []).map(f => Object.assign({}, f));
@@ -223,7 +226,7 @@
     },
 
     leave() {
-      const d = this.def.door;
+      const d = this.ret || this.def.door;
       BC.leaveBar(d.key, d.tx * 16 + 8, (d.ty + 1) * 16 + 12);
     },
 
