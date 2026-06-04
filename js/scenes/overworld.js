@@ -153,12 +153,14 @@
     if (a.type === 'dog') {
       BC.ui.toast('You pet ' + (a.name || 'the dog') + '. Good dog!', { good: true });
       BC.audio && BC.audio.sfx('confirm');
+      if (BC.fx) BC.fx.hearts(a.x, a.y - 8);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
       if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
     } else if (a.type === 'cat') {
       BC.ui.toast('You pet ' + (a.name || 'the cat') + '. It tolerates this. Briefly.', { good: true });
       BC.audio && BC.audio.sfx('confirm');
+      if (BC.fx) BC.fx.hearts(a.x, a.y - 8, 2);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
     } else {
@@ -299,8 +301,14 @@
     BC.rect(ctx, px + 2, y, W - 4, 9, st.bg);
     BC.rect(ctx, px + 2, y, W - 4, 1, 'rgba(255,255,255,0.18)');
     BC.rect(ctx, px + 2, y + 8, W - 4, 1, 'rgba(0,0,0,0.35)');
-    if (st.glow) BC.text(ctx, ext.sign, cx, y + 1, { size: 7, align: 'center', color: st.fg, shadowColor: st.glow });
-    else BC.text(ctx, ext.sign, cx, y + 1, { size: 7, align: 'center', color: st.fg, shadow: false });
+    if (st.glow) {
+      const on = !(BC.now && Math.sin(BC.now * 9 + px * 0.3) > 0.95); // occasional neon flicker
+      ctx.globalAlpha = on ? 1 : 0.4;
+      BC.text(ctx, ext.sign, cx, y + 1, { size: 7, align: 'center', color: st.fg, shadowColor: st.glow });
+      ctx.globalAlpha = 1;
+    } else {
+      BC.text(ctx, ext.sign, cx, y + 1, { size: 7, align: 'center', color: st.fg, shadow: false });
+    }
   }
 
   function drawDecor(ctx, d, x, y, W, H) {

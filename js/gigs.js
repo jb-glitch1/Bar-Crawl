@@ -25,7 +25,7 @@
           if (i === 0) {
             g.run.flags.gig_tourist = true; g.run.cash += 5;
             BC.ui.say(['"You\'re a LEGEND." They press $5 into your palm and melt into the night. (+$5)'], { speaker: 'Tourist' });
-            BC.audio && BC.audio.sfx('stamp');
+            BC.audio && BC.audio.sfx('stamp'); if (BC.fx) BC.fx.coins();
           } else {
             BC.ui.say(['"...you\'re no fun." They wander off.'], { speaker: 'Tourist' });
           }
@@ -38,7 +38,7 @@
       if (g.run.flags.gig_raccoon) { BC.ui.toast('The raccoon guards its trash empire. Respect it.'); return; }
       g.run.flags.gig_raccoon = true; g.run.cash += 3;
       BC.ui.say(['A raccoon is elbow-deep in a trash can.', 'It freezes. It judges you. It flicks three quarters at your feet and resumes.', '(+$3. You have been dismissed.)'], { speaker: 'Raccoon' });
-      BC.audio && BC.audio.sfx('confirm');
+      BC.audio && BC.audio.sfx('confirm'); if (BC.fx) BC.fx.coins();
     },
 
     // a street-corner coin bet (repeatable gambling gag)
@@ -46,7 +46,7 @@
       BC.ui.choose('A guy grins: "Bet you $5 this coin lands heads. You in? ($3 stake)"', ['"You\'re on."', 'Decline'], (i) => {
         if (i !== 0) return;
         if (g.run.cash < 3) { BC.ui.toast('"Come back when you got stake money, champ."'); return; }
-        if (Math.random() < 0.5) { g.run.cash += 5; BC.ui.toast('TAILS! You win $5. He is genuinely stunned.', { good: true }); BC.audio && BC.audio.sfx('stamp'); }
+        if (Math.random() < 0.5) { g.run.cash += 5; BC.ui.toast('TAILS! You win $5. He is genuinely stunned.', { good: true }); BC.audio && BC.audio.sfx('stamp'); if (BC.fx) BC.fx.coins(); }
         else { g.run.cash -= 3; BC.ui.toast('Heads. You lose $3. "Pleasure doin\' business."'); BC.audio && BC.audio.sfx('cancel'); }
       });
     }

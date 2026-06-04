@@ -258,6 +258,9 @@
         else if (e.f) BC.furniture.draw(ctx, e.f);
         else BC.gfx.actor(ctx, e.n.x - 8, e.n.y - 16, e.n.dir, 0, e.n.colors);
       }
+      // warm interior vignette (depth + lighting); skipped where gradients aren't supported
+      const grd = ctx.createRadialGradient && ctx.createRadialGradient(BC.W / 2, BC.H / 2 - 10, 36, BC.W / 2, BC.H / 2, 175);
+      if (grd && grd.addColorStop) { grd.addColorStop(0, 'rgba(255,220,150,0.05)'); grd.addColorStop(0.6, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.42)'); ctx.fillStyle = grd; ctx.fillRect(0, 0, BC.W, BC.H); }
       // small persistent label (top-center, clear of the HUD corners)
       BC.text(ctx, this.def.name, BC.W / 2, 4, { color: '#cdd', size: 8, align: 'center' });
       // transient "now entering" title card

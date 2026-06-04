@@ -44,6 +44,7 @@
   BC.setScene = function (name, args) {
     if (BC.scene && BC.scene.exit) BC.scene.exit();
     if (BC.ui && BC.ui.sceneCleanup) BC.ui.sceneCleanup();
+    if (BC.fx) BC.fx.clear();
     BC.scene = BC.scenes[name];
     BC.sceneName = name;
     if (!BC.scene) { console.error('No scene: ' + name); return; }
@@ -89,18 +90,21 @@
     last = ts;
     if (dt > 0.1) dt = 0.1; // clamp after tab-out
     BC.dt = dt;
-    gtime += dt;
+    gtime += dt; BC.now = gtime;
+    if (BC.fx) BC.fx.update(dt);
     if (BC.ui) BC.ui.update(dt);
     if (BC.scene) {
       if (BC.scene.update && !(BC.ui && BC.ui.blocking)) BC.scene.update(dt);
       if (BC.scene.render) {
-        const w = drunkWobble();
-        if (w) { ctx.save(); ctx.translate(w.x, w.y); BC.scene.render(ctx); ctx.restore(); }
+        const w = drunkWobble(), sh = BC.fx ? BC.fx.offset() : null;
+        const ox = (w ? w.x : 0) + (sh ? sh.x : 0), oy = (w ? w.y : 0) + (sh ? sh.y : 0);
+        if (ox || oy) { ctx.save(); ctx.translate(ox, oy); BC.scene.render(ctx); ctx.restore(); }
         else BC.scene.render(ctx);
       }
     }
     timeTint();
     drunkTint();
+    if (BC.fx) BC.fx.render(ctx);
     if (BC.hud) BC.hud.draw(ctx);
     if (BC.game) BC.game.tick(dt);
     if (BC.ui) BC.ui.render(ctx);

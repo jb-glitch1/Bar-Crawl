@@ -5,9 +5,12 @@
   let t = 0;
 
   S.win = {
-    enter() { t = 0; if (BC.audio) BC.audio.setMood('early'); },
+    enter() { t = 0; if (BC.audio) BC.audio.setMood('early'); if (BC.fx) BC.fx.confetti(); },
+    _confettiT: 0,
     update(dt) {
       t += dt;
+      this._confettiT -= dt;
+      if (this._confettiT <= 0 && BC.fx) { BC.fx.confetti(40); this._confettiT = 1.1; }
       if (t > 0.6 && (BC.input.pressed('a') || BC.input.pressed('start'))) {
         BC.game.newRun();
         BC.setScene('home', {});

@@ -36,6 +36,7 @@
   BC.flow = {
     endNight(reason, won) {
       const g = BC.game;
+      if (reason === 'blackout' && BC.fx) BC.fx.shake(4, 0.7);
       const steps = [];
       steps.push({ fadeOut: 1, dur: 0.8, color: '#000' });
 
