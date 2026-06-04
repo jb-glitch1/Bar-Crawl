@@ -149,11 +149,17 @@
   }
 
   function talkActor(a) {
+    if (a.gig && BC.gigs && BC.gigs[a.gig]) { BC.gigs[a.gig](BC.game, a); return; }
     if (a.type === 'dog') {
       BC.ui.toast('You pet ' + (a.name || 'the dog') + '. Good dog!', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
+      if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
+    } else if (a.type === 'cat') {
+      BC.ui.toast('You pet ' + (a.name || 'the cat') + '. It tolerates this. Briefly.', { good: true });
+      BC.audio && BC.audio.sfx('confirm');
+      a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
     } else {
       BC.ui.say(a.lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
@@ -325,7 +331,7 @@
     list.sort((p, q) => p.y - q.y);
     for (const e of list) {
       if (e.player) drawRider(ctx, player.x - 8, player.y - 16, player.dir, player.frame);
-      else if (e.a.type === 'dog') BC.gfx.dog(ctx, e.a.x - 8, e.a.y - 16, e.a.dir, e.a.frame, e.a.colors);
+      else if (e.a.type === 'dog' || e.a.type === 'cat') BC.gfx.dog(ctx, e.a.x - 8, e.a.y - 16, e.a.dir, e.a.frame, e.a.colors);
       else BC.gfx.actor(ctx, e.a.x - 8, e.a.y - 16, e.a.dir, e.a.frame, e.a.colors);
     }
   }

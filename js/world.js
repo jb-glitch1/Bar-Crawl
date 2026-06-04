@@ -304,9 +304,13 @@
       { x: 168, y: 198, type: 'person', colors: { shirt: '#2a6ad0' }, name: 'Neighbor', lines: ['Big night ahead? The bars close at 2 AM sharp.', 'Pace yourself. ...Or don\'t. Not my business.'] },
       { x: 96, y: 206, type: 'dog', colors: { body: '#caa06a' }, name: 'Biscuit' }
     ] });
-    makeScreen(S, '1,0', 'Downtown', { exits: X(0, 1, 1, 1), buildings: [{ quad: 'TL', id: 'hail_mary' }, { quad: 'TR', id: 'store' }] });
+    makeScreen(S, '1,0', 'Downtown', { exits: X(0, 1, 1, 1), buildings: [{ quad: 'TL', id: 'hail_mary' }, { quad: 'TR', id: 'store' }], actors: [
+      { x: 200, y: 196, type: 'person', colors: { shirt: '#b04040', hair: '#211' }, name: 'Hustler', gig: 'bet' }
+    ] });
     addScooter(S['1,0'], 6, 11);
-    makeScreen(S, '2,0', 'The Strip', { exits: X(0, 1, 1, 0), buildings: [{ quad: 'TL', id: 'off_key_west' }, { quad: 'TR', id: 'pour_decisions' }] });
+    makeScreen(S, '2,0', 'The Strip', { exits: X(0, 1, 1, 0), buildings: [{ quad: 'TL', id: 'off_key_west' }, { quad: 'TR', id: 'pour_decisions' }], actors: [
+      { x: 60, y: 200, type: 'person', colors: { shirt: '#7a5a2a' }, name: 'Busker', gig: 'busker' }
+    ] });
 
     makeScreen(S, '0,1', 'Riverside Park', { exits: X(1, 1, 0, 1), park: true, water: [[10, 10], [11, 10], [12, 10], [10, 11], [11, 11], [12, 11], [11, 12]], trees: [[1, 2], [13, 2], [2, 11], [13, 12]], actors: [
       { x: 64, y: 40, type: 'person', colors: { shirt: '#3a9d5a' }, name: 'Jogger', lines: ['On your left! ...Sorry. Force of habit.'] },
@@ -318,13 +322,18 @@
     S['0,1'].meta.props.push({ tx: 3, ty: 4, type: 'well' });
     S['0,1'].meta.interactions['3,4'] = wellRescue;
     makeScreen(S, '1,1', 'Old Town', { exits: X(1, 1, 1, 1), buildings: [{ quad: 'TL', id: 'sticky_floor' }, { quad: 'TR', id: 'cellar_door' }] });
-    makeScreen(S, '2,1', 'Backstreets', { exits: X(1, 1, 1, 0), buildings: [{ quad: 'TL', id: 'witz_end' }, { quad: 'TR', id: 'reggies' }] });
+    makeScreen(S, '2,1', 'Backstreets', { exits: X(1, 1, 1, 0), buildings: [{ quad: 'TL', id: 'witz_end' }, { quad: 'TR', id: 'reggies' }], actors: [
+      { x: 196, y: 198, type: 'person', colors: { shirt: '#3aa0d0' }, name: 'Tourist', gig: 'tourist' }
+    ] });
 
     makeScreen(S, '0,2', 'Frostgate', { exits: X(1, 0, 0, 1), buildings: [{ quad: 'TL', id: 'sleigh' }], trees: [[11, 3], [13, 4], [11, 11]] });
-    makeScreen(S, '1,2', 'Night Market', { exits: X(1, 0, 1, 1), buildings: [{ quad: 'TL', id: 'sobering_thoughts' }] });
+    makeScreen(S, '1,2', 'Night Market', { exits: X(1, 0, 1, 1), buildings: [{ quad: 'TL', id: 'sobering_thoughts' }], actors: [
+      { x: 64, y: 200, type: 'cat', colors: { body: '#d08a30', dark: '#a06820' }, name: 'Alley Cat', lines: ['The cat regards you as a peasant. A peasant it has, for now, permitted.'] }
+    ] });
     makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
       { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.'] },
-      { x: 110, y: 56, type: 'dog', colors: { body: '#8a8a8a' }, name: 'Echo' }
+      { x: 110, y: 56, type: 'dog', colors: { body: '#8a8a8a' }, name: 'Echo' },
+      { x: 60, y: 198, type: 'dog', colors: { body: '#777', dark: '#3a3a3a' }, name: 'Raccoon', gig: 'raccoon' }
     ] });
   }
 
