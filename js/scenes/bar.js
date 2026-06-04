@@ -46,6 +46,17 @@
       this.def = BC.bars[args.id];
       this.id = args.id;
       if (args.ret) this.ret = args.ret;
+      // you can't ride into a bar — a valet takes your wheels at the door
+      if (args.fromMinigame) {
+        this.titleT = 0;
+      } else {
+        this.prevVehicle = g.run.vehicle;
+        if (g.run.vehicle !== 'walk') {
+          const v = g.run.vehicle; g.setVehicle('walk');
+          BC.ui.toast(v === 'scooter' ? 'A valet eyes your scooter, then parks it.' : 'A valet takes your bike. Classy.');
+        }
+        this.titleT = 2.6; // "now entering" card
+      }
       this.screen = BC.world.fromAscii(this.def.name, this.def.room);
       // place furniture (solid pieces block movement)
       this.furniture = (this.def.furniture || []).map(f => Object.assign({}, f));
@@ -78,6 +89,7 @@
     },
 
     update(dt) {
+      if (this.titleT > 0) this.titleT -= dt;
       this.player.update(dt, this.screen);
       // walk onto the exit doormat to leave (and you can also press Z facing it)
       const ed = this.screen.exitDoor;
@@ -226,6 +238,8 @@
     },
 
     leave() {
+      const g = BC.game;
+      if (this.prevVehicle && this.prevVehicle !== 'walk') g.setVehicle(this.prevVehicle); // valet brings your ride back
       const d = this.ret || this.def.door;
       BC.leaveBar(d.key, d.tx * 16 + 8, (d.ty + 1) * 16 + 12);
     },
@@ -244,14 +258,26 @@
         else if (e.f) BC.furniture.draw(ctx, e.f);
         else BC.gfx.actor(ctx, e.n.x - 8, e.n.y - 16, e.n.dir, 0, e.n.colors);
       }
-      // banner
-      BC.rect(ctx, 0, 0, BC.W, 12, 'rgba(8,8,16,0.8)');
-      BC.text(ctx, this.def.name, 4, 2, { color: '#ffe27a', size: 8 });
-      BC.text(ctx, this.stampHint(), BC.W - 4, 2, { color: '#9ab', size: 8, align: 'right' });
+      // small persistent label (top-center, clear of the HUD corners)
+      BC.text(ctx, this.def.name, BC.W / 2, 4, { color: '#cdd', size: 8, align: 'center' });
+      // transient "now entering" title card
+      if (this.titleT > 0) {
+        let a = 1;
+        if (this.titleT > 2.3) a = (2.6 - this.titleT) / 0.3;
+        else if (this.titleT < 0.6) a = this.titleT / 0.6;
+        ctx.globalAlpha = Math.max(0, Math.min(1, a));
+        BC.rect(ctx, 0, 78, BC.W, 42, 'rgba(8,8,16,0.85)');
+        BC.rect(ctx, 0, 78, BC.W, 1, '#ffe27a'); BC.rect(ctx, 0, 119, BC.W, 1, '#ffe27a');
+        BC.text(ctx, this.def.name, BC.W / 2, 86, { color: '#ffe27a', size: 14, align: 'center' });
+        if (this.def.tag) BC.text(ctx, this.def.tag, BC.W / 2, 106, { color: '#cfe', size: 8, align: 'center' });
+        ctx.globalAlpha = 1;
+      }
+      // leave hint (bottom)
+      BC.text(ctx, this.stampHint(), BC.W / 2, BC.H - 10, { color: '#99a', size: 7, align: 'center' });
     },
 
     stampHint() {
-      return BC.game.hasStamp(this.id) ? 'STAMPED *' : 'press X by the door to leave';
+      return BC.game.hasStamp(this.id) ? 'STAMPED * - walk to the door to leave' : 'walk to the door (or press X) to leave';
     }
   };
 })();

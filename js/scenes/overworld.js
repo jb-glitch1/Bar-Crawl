@@ -238,30 +238,51 @@
     const R = (x, y, w, h, c) => BC.rect(ctx, x, y, w, h, c);
     const px = ox + b.x * 16, py = oy + b.y * 16, W = b.w * 16, H = b.h * 16, ext = b.ext;
     R(px + 2, py + H - 1, W, 3, 'rgba(0,0,0,0.18)');         // ground shadow
-    R(px, py + 10, W, H - 10, ext.wall);                     // wall
-    R(px, py + 10, W, 2, 'rgba(255,255,255,0.10)');
+    R(px, py + 9, W, H - 9, ext.wall);                       // wall
+    R(px, py + 9, W, 2, 'rgba(255,255,255,0.10)');
     R(px, py + H - 3, W, 3, 'rgba(0,0,0,0.22)');
-    R(px, py + 10, 2, H - 10, 'rgba(0,0,0,0.10)');
-    R(px + W - 2, py + 10, 2, H - 10, 'rgba(0,0,0,0.18)');
-    R(px - 3, py - 2, W + 6, 13, ext.roof);                  // roof overhang
+    R(px, py + 9, 2, H - 9, 'rgba(0,0,0,0.10)');
+    R(px + W - 2, py + 9, 2, H - 9, 'rgba(0,0,0,0.18)');
+    R(px - 3, py - 2, W + 6, 12, ext.roof);                  // roof overhang
     R(px - 3, py - 2, W + 6, 3, 'rgba(255,255,255,0.16)');
-    R(px - 3, py + 9, W + 6, 2, 'rgba(0,0,0,0.25)');
+    R(px - 3, py + 8, W + 6, 2, 'rgba(0,0,0,0.25)');
+    drawSign(ctx, ext, px, py + 10, W);                     // stylized sign on the facade
     const nf = BC.world.nightFactor();
-    [px + 5, px + W - 13].forEach((wx, i) => {               // windows
+    [px + 4, px + W - 12].forEach((wx, i) => {              // windows below the sign
       const lit = nf > 0.4 || i === 1;
-      R(wx, py + 15, 8, 7, lit ? '#ffe27a' : '#bfe0ee');
-      R(wx, py + 15, 8, 1, 'rgba(0,0,0,0.4)'); R(wx + 3, py + 15, 1, 7, 'rgba(0,0,0,0.3)');
+      R(wx, py + 24, 8, 6, lit ? '#ffe27a' : '#bfe0ee');
+      R(wx, py + 24, 8, 1, 'rgba(0,0,0,0.4)');
     });
-    const dW = 12, dH = 15, dX = px + W / 2 - dW / 2, dY = (b.dir === 'down') ? py + H - dH : py + 10;
-    R(dX - 1, dY - 1, dW + 2, dH + 1, '#2a1c10');            // door
+    const dW = 12, dH = 14, dX = px + W / 2 - dW / 2, dY = (b.dir === 'down') ? py + H - dH : py + 9;
+    R(dX - 1, dY - 1, dW + 2, dH + 1, '#2a1c10');           // door
     R(dX, dY, dW, dH, ext.door);
     R(dX, dY, dW, 2, 'rgba(255,255,255,0.12)');
     R(dX + dW - 3, dY + dH / 2, 2, 2, '#e8d27a');
-    const sw = ext.sign.length * 4 + 8, scx = px + W / 2;    // sign
-    R(scx - sw / 2, py - 11, sw, 9, 'rgba(8,8,16,0.92)');
-    R(scx - sw / 2, py - 11, sw, 1, ext.roof);
-    BC.text(ctx, ext.sign, scx, py - 10, { size: 7, align: 'center', color: '#ffe27a', shadow: false });
     drawDecor(ctx, ext.decor, px, py, W, H);
+  }
+
+  // sign styling keyed off the building's decor (i.e., its bar type)
+  const SIGN = {
+    neon:    { bg: '#16121e', fg: '#5ad0ff', glow: '#1aa3d8' },
+    snow:    { bg: '#7a1818', fg: '#ffffff', glow: '#e33b3b' },
+    diner:   { bg: '#1a1a22', fg: '#ff6b6b', glow: '#ffd166' },
+    awning:  { bg: '#2a1018', fg: '#ffe27a', glow: 0 },
+    lantern: { bg: '#3a2616', fg: '#ffd9a0', glow: 0 },
+    fridge:  { bg: '#3a3a32', fg: '#cfcfc0', glow: 0 },
+    spiral:  { bg: '#241038', fg: '#d09aff', glow: '#7a3ad0' },
+    column:  { bg: '#161636', fg: '#ffe27a', glow: 0 },
+    stone:   { bg: '#2a2a32', fg: '#cfd2dd', glow: 0 },
+    pennant: { bg: '#16243a', fg: '#9ed0ff', glow: 0 },
+    home:    { bg: '#3a2616', fg: '#ffd9a0', glow: 0 }
+  };
+  function drawSign(ctx, ext, px, y, W) {
+    const st = SIGN[ext.decor] || { bg: '#0a0a14', fg: '#ffe27a', glow: 0 };
+    const cx = px + W / 2;
+    BC.rect(ctx, px + 2, y, W - 4, 9, st.bg);
+    BC.rect(ctx, px + 2, y, W - 4, 1, 'rgba(255,255,255,0.18)');
+    BC.rect(ctx, px + 2, y + 8, W - 4, 1, 'rgba(0,0,0,0.35)');
+    if (st.glow) BC.text(ctx, ext.sign, cx, y + 1, { size: 7, align: 'center', color: st.fg, shadowColor: st.glow });
+    else BC.text(ctx, ext.sign, cx, y + 1, { size: 7, align: 'center', color: st.fg, shadow: false });
   }
 
   function drawDecor(ctx, d, x, y, W, H) {

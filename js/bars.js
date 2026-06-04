@@ -211,9 +211,16 @@
     witz_end: { name: 'a stiff martini', amount: 17 },
     speakeasy: { name: 'a secret cocktail', amount: 17 }
   };
+  const TAGS = {
+    tipsy_newt: 'Neighborhood Pub', hail_mary: 'Sports Bar', off_key_west: 'Karaoke Bar',
+    pour_decisions: 'Wine Bar', sticky_floor: 'Dive Bar', cellar_door: 'Craft-Beer Cellar',
+    witz_end: 'Cocktail Lounge', deja_brew: 'A Bar You Know', sleigh: 'Christmas in July',
+    sobering_thoughts: '24-Hour Diner', speakeasy: 'Speakeasy'
+  };
   Object.keys(BC.bars).forEach(id => {
     if (PAL[id]) BC.bars[id].palette = PAL[id];
     if (FURN[id]) BC.bars[id].furniture = FURN[id];
     if (DRINKS[id]) BC.bars[id].drink = DRINKS[id];
+    if (TAGS[id]) BC.bars[id].tag = TAGS[id];
   });
 })();
