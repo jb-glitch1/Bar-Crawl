@@ -45,7 +45,19 @@
       this.player.dir = 'up';
       if (BC.audio) BC.audio.setMood('early');
       if (!args.skipIntro) {
-        BC.ui.say(['5:00 PM. The whole night is ahead of you.', 'Grab your stuff. The crawl is calling. (Head out the door.)'], { speaker: 'Home' });
+        if (!g.meta.seenIntro) {
+          g.meta.seenIntro = true; g.save();
+          BC.ui.say([
+            'You moved to town recently. Or did you? Lately every night starts the same: 5 PM, this apartment.',
+            'Your phone buzzes: tonight is THE BAR CRAWL.',
+            'Rule 1 - hit every bar and earn its stamp. Twelve in all.',
+            'Rule 2 - order a DRINK to take on each place. Watch your meter (top-right).',
+            'Rule 3 - home before 2 AM. Black out or miss last call and the night... starts over. (You\'ve noticed.) But you keep what you learned.',
+            'They say the night you finish the WHOLE card is the one that finally sticks. Menu (M) = map + card. Out you go!'
+          ], { speaker: 'Tonight' });
+        } else {
+          BC.ui.say(['5:00 PM again. You remember the route. Sharper this time.'], { speaker: 'Home' });
+        }
       }
     },
 

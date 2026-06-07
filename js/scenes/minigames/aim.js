@@ -32,6 +32,7 @@
         if (this.secretActive() && !this.secret.hit && Math.hypot(r.x - this.secret.x, r.y - this.secret.y) <= 7) {
           pts += 40; this.secret.hit = true;
           BC.ui.toast('SECRET BULLSEYE!  +40', { good: true });
+          if (BC.fx) { BC.fx.stars(CX, CY, 16); BC.fx.shake(3, 0.3); }
         }
         this.score += pts;
         this.darts.push({ x: r.x, y: r.y, pts });

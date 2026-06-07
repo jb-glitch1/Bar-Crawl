@@ -2,18 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Bar-Crawl</title>
+<!-- "Add to Home Screen" launches fullscreen (more room, no browser chrome) -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bar-Crawl">
+<meta name="theme-color" content="#07070d">
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="frame">
   <canvas id="game" width="768" height="720"></canvas>
-  <div id="hint">Arrows / WASD to move &middot; Z confirm &middot; X cancel &middot; Enter for menu</div>
+  <div id="hint">Arrows / WASD move &middot; Z confirm &middot; X cancel &middot; Enter menu &middot; on phones use the on-screen pad</div>
 </div>
 <!-- modules loaded in dependency order (no build step) -->
 <script src="js/util.js"></script>
 <script src="js/input.js"></script>
+<script src="js/touch.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/furniture.js"></script>
 <script src="js/save.js"></script>
@@ -22,6 +30,7 @@
 <script src="js/ui.js"></script>
 <script src="js/flow.js"></script>
 <script src="js/hud.js"></script>
+<script src="js/fx.js"></script>
 <script src="js/quests.js"></script>
 <script src="js/gigs.js"></script>
 <script src="js/bars.js"></script>

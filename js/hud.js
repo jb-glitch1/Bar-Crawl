@@ -13,8 +13,17 @@
       const g = BC.game; if (!g || !g.run) return;
       clock(ctx, g);
       tipsy(ctx, g);
+      stamps(ctx, g);
     }
   };
+
+  function stamps(ctx, g) {
+    const txt = 'STAMPS ' + g.stampCount() + '/' + g.activeCard().length;
+    const w = txt.length * 5 + 12, x = 3, y = BC.H - 16;
+    pill(ctx, x, y, w, 14);
+    BC.text(ctx, '*', x + 5, y + 3, { size: 8, color: '#ffe27a' });
+    BC.text(ctx, txt, x + 12, y + 3, { size: 8, color: '#ffe27a' });
+  }
 
   function pill(ctx, x, y, w, h) {
     ctx.fillStyle = 'rgba(10,10,18,0.78)';

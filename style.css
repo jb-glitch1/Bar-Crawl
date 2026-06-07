@@ -30,4 +30,64 @@ canvas#game {
   letter-spacing: 1px;
   opacity: 0.5;
   user-select: none;
+  text-align: center;
+  padding: 0 8px;
+}
+
+/* ---- touch controls (phones / tablets) ---- */
+.tc {
+  position: fixed;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+body.touch .tc { display: flex; }
+body.touch #hint { display: none; }
+body.touch { touch-action: none; }
+body.touch canvas#game {
+  width: min(100vw, calc(100vh * 256 / 240));
+  box-shadow: none;
+  border-radius: 0;
+}
+body.touch #frame { gap: 0; }
+
+.tc-pad {
+  left: 4vmin; bottom: 5vmin;
+  width: 38vmin; height: 38vmin;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.18);
+}
+.tc-pad.on { background: rgba(255,255,255,0.12); }
+.tc-knob {
+  width: 16vmin; height: 16vmin;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.22);
+  border: 2px solid rgba(255,255,255,0.35);
+  pointer-events: none;
+  transition: transform 0.04s linear;
+}
+.tc-btn {
+  width: 18vmin; height: 18vmin;
+  border-radius: 50%;
+  font: bold 6vmin/1 "Courier New", monospace;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.28);
+}
+.tc-btn.on { background: rgba(255,255,255,0.32); transform: scale(0.94); }
+.tc-a { right: 5vmin;  bottom: 7vmin;  background: rgba(110,200,120,0.20); border-color: rgba(150,235,160,0.5); }
+.tc-b { right: 23vmin; bottom: 18vmin; background: rgba(220,110,110,0.18); border-color: rgba(245,150,150,0.5); }
+.tc-menu {
+  right: 3vmin; top: 3vmin;
+  padding: 1.6vmin 3.4vmin;
+  border-radius: 7px;
+  font: bold 3.4vmin/1 "Courier New", monospace;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.3);
 }

@@ -101,11 +101,13 @@
         gfx(ctx, x + 5, y + 2, '#46a85a', 6, 5);
         gfx(ctx, x + 6, y + 3, '#6fc97a', 3, 3);
         break;
-      case T.WATER:
+      case T.WATER: {
         gfx(ctx, x, y, '#2f86c0');
-        if (h % 4 === 0) gfx(ctx, x + (h % 11), y + (h % 12), '#5aa6e0', 3, 1);
         if (h % 6 === 0) gfx(ctx, x + (h % 9), y + (h % 10), '#2a72a8', 2, 1);
+        const wy = (Math.sin((BC.now || 0) * 1.4 + tx * 0.9) * 3 + 7) | 0; // drifting shimmer
+        gfx(ctx, x + 2, y + wy, 12, 1, 'rgba(220,240,255,0.22)');
         break;
+      }
       case T.WALL:
         gfx(ctx, x, y, '#4a4a5a');
         gfx(ctx, x, y + 14, '#3a3a48', 16, 2);
@@ -252,6 +254,7 @@
     }
     g.run.flags.well_done = true;
     g.run.cash += 15;
+    if (BC.fx) BC.fx.coins();
     BC.ui.say([
       'You peer into the old well.',
       'A man waves up: "Oh thank GOD. I fell in during happy hour."',
@@ -284,7 +287,7 @@
     const s = fromAscii(name, rows, { spawnTile: T.GRASS, meta: { interactions: {}, props: [], signs: [], buildings: [], actors: opts.actors || [], park: !!opts.park, throughRoad: !!(E.left && E.right) } });
     builds.forEach(b => {
       const ext = EXT[b.id] || EXT.home;
-      s.meta.buildings.push({ x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
+      s.meta.buildings.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
       const key2 = b.dx + ',' + b.dy;
       const ret = { key: key, tx: b.dx, ty: b.dy }; // return spot = just outside this door
       if (b.id === 'reggies') s.meta.interactions[key2] = (g) => speakeasyGate(g, ret);

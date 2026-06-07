@@ -22,7 +22,12 @@
       for (const k in pressed) if (pressed[k]) return true;
       return false;
     },
-    clear() { for (const k in pressed) pressed[k] = false; }
+    clear() { for (const k in pressed) pressed[k] = false; },
+    // on-screen / touch controls feed the same state as the keyboard
+    touch(action, isDown) {
+      if (isDown) { if (!down[action]) pressed[action] = true; down[action] = true; }
+      else { down[action] = false; }
+    }
   };
 
   window.addEventListener('keydown', (e) => {

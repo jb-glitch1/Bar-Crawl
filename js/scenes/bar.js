@@ -199,7 +199,7 @@
       BC.ui.say(['*the bartender studies you*', '"...You again. The 5-PM-to-2-AM one. The looper."', '"This is loop number ' + g.meta.loops + ' for you. Give or take."'], { speaker: n.name }, () => {
         BC.ui.choose('"Quick — do you remember how this night ends?"', ['"...No idea."', '"Every single time."', '"Wait — you KNOW?"'], () => {
           g.earnStamp('deja_brew');
-          BC.ui.say(['*slides you a stamp without being asked*', '"Knew you\'d pick that. See you next loop."'], { speaker: n.name });
+          BC.ui.say(['*slides you a stamp without being asked*', '"Wanna stop looping? Punch every card. The night you FINISH is the one that lets you wake up tomorrow."', '"...or keep comin\' back. I don\'t mind the company."'], { speaker: n.name });
         });
       });
     },
@@ -258,6 +258,9 @@
         else if (e.f) BC.furniture.draw(ctx, e.f);
         else BC.gfx.actor(ctx, e.n.x - 8, e.n.y - 16, e.n.dir, 0, e.n.colors);
       }
+      // warm interior vignette (depth + lighting); skipped where gradients aren't supported
+      const grd = ctx.createRadialGradient && ctx.createRadialGradient(BC.W / 2, BC.H / 2 - 10, 36, BC.W / 2, BC.H / 2, 175);
+      if (grd && grd.addColorStop) { grd.addColorStop(0, 'rgba(255,220,150,0.05)'); grd.addColorStop(0.6, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.42)'); ctx.fillStyle = grd; ctx.fillRect(0, 0, BC.W, BC.H); }
       // small persistent label (top-center, clear of the HUD corners)
       BC.text(ctx, this.def.name, BC.W / 2, 4, { color: '#cdd', size: 8, align: 'center' });
       // transient "now entering" title card
