@@ -274,6 +274,26 @@
     s.meta.interactions[tx + ',' + ty] = (g) => cabRide(g, key);
   }
 
+  // sit on any bench to people-watch half an hour away
+  const BENCH_SIGHTS = [
+    'A pigeon wins an argument with a bagel.',
+    'Someone jogs past. Training for what, exactly?',
+    'A couple argues softly about a boat neither owns.',
+    'The moon does nothing. Ten out of ten.',
+    'A cat crosses the street with real purpose.',
+    'Somewhere, glass breaks. A distant cheer follows.'
+  ];
+  function benchSit(g) {
+    BC.ui.choose('Sit and people-watch a while?', ['Watch the town (+30 min)', 'Keep moving'], (i) => {
+      if (i !== 0) return;
+      g.run.minutes = Math.min(g.nightLen() - 1, g.run.minutes + 30);
+      g.eat(5); // fresh air helps a little
+      BC.ui.toast(BC.util.choice(BENCH_SIGHTS));
+      BC.ui.toast('Time passes. (' + g.timeString() + ')');
+      BC.audio && BC.audio.sfx('blip');
+    });
+  }
+
   // Lassie side-gag: Scout leads you to the old well; you fish out a guy for cash.
   function wellRescue(g) {
     if (g.run.flags.well_done) {
@@ -325,7 +345,11 @@
       const ret = { key: key, tx: b.dx, ty: b.dy }; // return spot = just outside this door
       if (b.id === 'reggies') s.meta.interactions[key2] = (g) => speakeasyGate(g, ret);
       else if (b.id === 'store') s.meta.interactions[key2] = cornerStore;
-      else if (b.id === 'home') s.meta.interactions[key2] = () => BC.ui.toast("Your place. The night's still young.");
+      else if (b.id === 'home') s.meta.interactions[key2] = () => BC.ui.cutscene([
+        { fadeOut: 1, dur: 0.22 },
+        { do: () => BC.setScene('home', { skipIntro: true }) },
+        { fadeIn: 0, dur: 0.22 }
+      ]);
       else s.meta.interactions[key2] = () => BC.enterBar(b.id, ret);
     });
     S[key] = s;
@@ -396,10 +420,17 @@
     // and someone who only exists at the edge of a blackout
     S['0,0'].meta.actors.push({ x: 224, y: 100, type: 'person', brownoutOnly: true, colors: { shirt: '#c0444f', hair: '#2f2218' }, name: 'Future You', gig: 'futureself' });
 
-    // district dressing
-    const deco = (k, tx, ty, type) => { if (S[k]) S[k].meta.props.push({ tx, ty, type }); };
+    // district dressing (benches are sittable: the anywhere time-skip)
+    const deco = (k, tx, ty, type) => {
+      if (!S[k]) return;
+      S[k].meta.props.push({ tx, ty, type });
+      if (type === 'bench') S[k].meta.interactions[tx + ',' + ty] = benchSit;
+    };
     deco('0,2', 10, 5, 'bench'); deco('0,2', 12, 10, 'bench');
     deco('2,2', 11, 4, 'bench'); deco('0,1', 13, 5, 'bench');
+    deco('1,0', 12, 10, 'bench'); deco('2,0', 12, 11, 'bench');
+    deco('1,1', 12, 11, 'bench'); deco('2,1', 11, 11, 'bench');
+    deco('1,2', 4, 11, 'bench');
     deco('0,0', 12, 11, 'hydrant'); deco('1,1', 3, 11, 'hydrant');
     deco('1,2', 11, 5, 'planter'); deco('2,0', 6, 4, 'planter');
   }

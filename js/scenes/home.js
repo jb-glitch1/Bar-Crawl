@@ -55,7 +55,10 @@
       const sp = this.screen.spawn || { x: 120, y: 200 };
       this.player = BC.player = new BC.Player(sp.x, sp.y);
       this.player.dir = 'up';
-      if (BC.audio) BC.audio.setMood('early');
+      if (BC.audio) BC.audio.setMood((BC.game && BC.game.mood) || 'early'); // keep the night's mood on re-entry
+      if (args.skipIntro && g.run && g.run.minutes > 5) {
+        BC.ui.toast('Home. The bed still works, you know.');
+      }
       if (!args.skipIntro) {
         if (!g.meta.seenIntro) {
           g.meta.seenIntro = true; g.save();
