@@ -39,6 +39,7 @@
       tab: 0,          // the Deja Brew tab, in dollars, across all loops
       mastered: {},    // bars stamped in ANY loop ("regular" status)
       mode: 'night',   // difficulty: 'casual' | 'night' | 'lastcall'
+      sound: true,     // music/sfx on
       highscores: {},  // per-bar best scores (persist across loops)
       seenIntro: false
     };
@@ -56,6 +57,7 @@
     init() {
       const saved = BC.save.load();
       if (saved && saved.meta) this.meta = Object.assign(freshMeta(), saved.meta);
+      if (BC.audio && BC.audio.setMuted) BC.audio.setMuted(!this.meta.sound);
       this.newRun();
     },
 
@@ -104,7 +106,12 @@
       if (this.run.tipsy < 65) this.run.flags.warnBlackout = false; // re-arm the warning after sobering
       if (this.run.energized > 0) this.run.energized -= dt;
       this._updateMood();
-      if (BC.audio) BC.audio.update(this.run.tipsy);
+      if (BC.audio) BC.audio.update(this.run.tipsy, this.run.minutes >= this.nightLen() - 60 ? 1 : this.run.minutes >= this.nightLen() - 120 ? 0.5 : 0);
+      if (!this.run.flags.lastCallWarned && this.minutesLeft() <= 30) {
+        this.run.flags.lastCallWarned = true;
+        BC.ui && BC.ui.toast('LAST CALL in 30 minutes. Run.', { good: false });
+        BC.audio && BC.audio.sting('lastcall');
+      }
       if (this.allStamps()) { this.endNight('complete'); return; }
       if (this.run.minutes >= this.nightLen()) this.endNight('lastcall');
     },
@@ -218,7 +225,7 @@
       this.meta.mastered[id] = true; // "regular" status persists across loops
       BC.ui && BC.ui.toast('* STAMP EARNED: ' + this.stampName(id) + ' *', { good: true });
       if (STAMP_FLAVOR[id] && BC.ui) BC.ui.toast(STAMP_FLAVOR[id], { dur: 3.4 });
-      BC.audio && BC.audio.sfx('stamp');
+      BC.audio && (BC.audio.sting ? BC.audio.sting('stamp') : BC.audio.sfx('stamp'));
       if (BC.fx) { BC.fx.stars(); BC.fx.shake(2, 0.3); }
     },
     highScore(id) { return this.meta.highscores[id] || 0; },

@@ -113,6 +113,13 @@
     },
 
     _menu(dt) {
+      if (BC.input.pressed('a')) { // Z flips the sound while the menu is open
+        const g = BC.game;
+        g.meta.sound = !g.meta.sound;
+        BC.audio && BC.audio.setMuted(!g.meta.sound);
+        g.save();
+        BC.audio && BC.audio.sfx('blip');
+      }
       if (BC.input.pressed('start') || BC.input.pressed('b')) {
         menu = false; BC.audio && BC.audio.sfx('cancel');
       }
@@ -233,8 +240,8 @@
       const vlabel = g.VEHICLE[r.vehicle].label + (r.vehicle === 'scooter' ? ' (' + r.scooterPct + '%)' : '');
       row('Getting around', vlabel);
       row('Cash', '$' + r.cash, '#9be29b');
-      const card = g.activeCard();
-      row('Stamps', g.stampCount() + ' / ' + card.length, '#ffe27a');
+      const card = g.activeCard(); // stamps live on the HUD + the map below
+      row('Sound (Z flips)', g.meta.sound ? 'ON' : 'OFF', g.meta.sound ? '#9be29b' : '#ff8a8a');
 
       // town map: 3x3 of screens, gold dot = stamped bar, white box = you are here
       yy += 4;

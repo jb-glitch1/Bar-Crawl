@@ -18,7 +18,7 @@
   }
 
   S.win = {
-    enter() { t = 0; this._cf = 0; if (BC.audio) BC.audio.setMood('early'); if (BC.fx) BC.fx.confetti(); },
+    enter() { t = 0; this._cf = 0; if (BC.audio) { BC.audio.setMood('early'); if (BC.audio.sting) BC.audio.sting('win'); } if (BC.fx) BC.fx.confetti(); },
     update(dt) {
       t += dt;
       this._cf -= dt;

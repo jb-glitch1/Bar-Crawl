@@ -20,19 +20,32 @@
     '################'
   ];
 
-  // per-bar generative music themes (passed to BC.audio.setMood)
+  // per-bar generative music themes (passed to BC.audio.setMood).
+  // mel = scale-degree phrase (null = rest), drums = K kick / S snare / h hat /
+  // b sleigh bell per step, rhy = step-length multipliers (swing).
   const M = {
-    cozy:    { tempo: 0.27, wave: 'triangle', root: 220.0, scale: [0, 2, 4, 7, 9], bassEvery: 4, gain: 0.15 },
-    sports:  { tempo: 0.15, wave: 'sawtooth', root: 174.6, scale: [0, 4, 7, 11], bassEvery: 2, gain: 0.13 },
-    karaoke: { tempo: 0.20, wave: 'square',   root: 261.6, scale: [0, 2, 4, 5, 7, 9], bassEvery: 4, gain: 0.13 },
-    dive:    { tempo: 0.34, wave: 'sawtooth', root: 130.8, scale: [0, 3, 5, 7, 10], bassEvery: 4, gain: 0.13 },
-    wine:    { tempo: 0.30, wave: 'triangle', root: 233.1, scale: [0, 2, 4, 5, 9, 11], bassEvery: 4, gain: 0.12 },
-    wits:    { tempo: 0.16, wave: 'square',   root: 155.6, scale: [0, 2, 3, 5, 7, 8, 11], bassEvery: 2, gain: 0.13 },
-    dungeon: { tempo: 0.24, wave: 'square',   root: 164.8, scale: [0, 2, 3, 7, 8], bassEvery: 4, gain: 0.13 },
-    xmas:    { tempo: 0.22, wave: 'square',   root: 261.6, scale: [0, 2, 4, 5, 7, 9, 11], bassEvery: 4, gain: 0.13 },
-    diner:   { tempo: 0.26, wave: 'triangle', root: 196.0, scale: [0, 3, 5, 7, 10], bassEvery: 4, gain: 0.13 },
-    deja:    { tempo: 0.32, wave: 'sawtooth', root: 138.6, scale: [0, 1, 4, 6, 8, 10], bassEvery: 8, gain: 0.12 },
-    speak:   { tempo: 0.30, wave: 'sawtooth', root: 146.8, scale: [0, 3, 5, 6, 7, 10], bassEvery: 4, gain: 0.12 }
+    cozy:    { tempo: 0.27, wave: 'triangle', root: 220.0, scale: [0, 2, 4, 7, 9], bassEvery: 3, gain: 0.15,
+               mel: [0, 1, 2, 4, 2, 1, 0, 2, 1, 2, 3, 2, 1, 0, 1, null], drums: 'K.h' },
+    sports:  { tempo: 0.15, wave: 'sawtooth', root: 174.6, scale: [0, 4, 7, 11], bassEvery: 2, gain: 0.13,
+               mel: [0, 1, 2, 3, 2, 1, 0, 1], drums: 'K.h.S.h.' },
+    karaoke: { tempo: 0.20, wave: 'square',   root: 261.6, scale: [0, 2, 4, 5, 7, 9], bassEvery: 4, gain: 0.13,
+               mel: [2, 2, 3, 4, 4, 3, 2, 1, 0, 0, 1, 2, 2, 1, 1, null], drums: 'K.h.S.h.' },
+    dive:    { tempo: 0.34, wave: 'sawtooth', root: 130.8, scale: [0, 3, 5, 7, 10], bassEvery: 4, gain: 0.13,
+               mel: [0, 2, 3, 4, 3, 2, 0, null, 2, 3, 2, 0, 1, 0, null, null], drums: 'K..S..h.', rhy: [1.4, 0.6] },
+    wine:    { tempo: 0.30, wave: 'triangle', root: 233.1, scale: [0, 2, 4, 5, 9, 11], bassEvery: 4, gain: 0.12,
+               mel: [0, 2, 4, 5, 4, 2, 1, 0], drums: 'h.......', rhy: [1, 1, 1.5, 0.5] },
+    wits:    { tempo: 0.16, wave: 'square',   root: 155.6, scale: [0, 2, 3, 5, 7, 8, 11], bassEvery: 2, gain: 0.13,
+               mel: [0, 0, 3, 0, 0, 4, 0, 5], drums: 'K.h.K.hh' },
+    dungeon: { tempo: 0.24, wave: 'square',   root: 164.8, scale: [0, 2, 3, 7, 8], bassEvery: 4, gain: 0.13,
+               mel: [0, 2, 1, 3, 2, 4, 1, 0], drums: 'K...S...' },
+    xmas:    { tempo: 0.22, wave: 'square',   root: 261.6, scale: [0, 2, 4, 5, 7, 9, 11], bassEvery: 4, gain: 0.13,
+               mel: [2, 2, 2, null, 2, 2, 2, null, 2, 4, 0, 1, 2, null, null, null], drums: 'b.b.b.b.' },
+    diner:   { tempo: 0.26, wave: 'triangle', root: 196.0, scale: [0, 3, 5, 7, 10], bassEvery: 4, gain: 0.13,
+               mel: [0, 2, 3, 4, 3, 2, 0, 2], drums: 'K..h', rhy: [1.3, 0.7] },
+    deja:    { tempo: 0.32, wave: 'sawtooth', root: 138.6, scale: [0, 1, 4, 6, 8, 10], bassEvery: 8, gain: 0.12,
+               mel: [0, 1, 2, 3, 3, 2, 1, 0], drums: '....h...' },
+    speak:   { tempo: 0.30, wave: 'sawtooth', root: 146.8, scale: [0, 3, 5, 6, 7, 10], bassEvery: 4, gain: 0.12,
+               mel: [0, 2, 3, 4, 3, 2, 4, 2], drums: 'K..h', rhy: [1.5, 0.5] }
   };
 
   BC.bars = {

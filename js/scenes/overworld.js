@@ -50,6 +50,11 @@
       const g = BC.game;
       updateAmbient(dt, screen);
 
+      // crickets in the park after dark
+      if (screen.meta.park && BC.world.nightFactor() > 0.5 && Math.random() < dt * 0.35) {
+        BC.audio && BC.audio.sfx('cricket');
+      }
+
       // scooter battery drains embarrassingly fast; parks reject it outright
       g.drainScooter(dt, player.moving);
       if (screen.meta && screen.meta.park && g.run.vehicle === 'scooter') {

@@ -52,6 +52,7 @@
       if (phase === 'title' && t > 0.4 && (BC.input.pressed('a') || BC.input.pressed('start'))) {
         phase = 'gate'; askAge();
       }
+      if (phase === 'title' && BC.input.pressed('b')) { BC.setScene('soundtest'); }
     },
     render(ctx) {
       // night sky
@@ -91,7 +92,7 @@
       if (phase === 'title' && (t % 1.0) < 0.6) {
         BC.text(ctx, 'Press Z to start', BC.W / 2, 214, { color: '#fff', size: 10, align: 'center' });
       }
-      BC.text(ctx, 'Z confirm - X cancel - M status', BC.W / 2, 232, { color: '#667', size: 7, align: 'center' });
+      BC.text(ctx, 'Z start - M status - X sound test', BC.W / 2, 232, { color: '#667', size: 7, align: 'center' });
     }
   };
 })();

@@ -7,7 +7,9 @@
   // ret = { key, tx, ty } of the overworld door you came in through (so we can
   // put you back just outside it). Falls back to the bar's declared door.
   BC.enterBar = (id, ret) => BC.ui.cutscene([
-    { fadeOut: 1, dur: 0.22 }, { do: () => BC.setScene('bar', { id, ret }) }, { fadeIn: 0, dur: 0.22 }
+    { fadeOut: 1, dur: 0.22 },
+    { do: () => { BC.audio && BC.audio.sfx('chime'); BC.setScene('bar', { id, ret }); } },
+    { fadeIn: 0, dur: 0.22 }
   ]);
   BC.leaveBar = (key, px, py) => BC.ui.cutscene([
     { fadeOut: 1, dur: 0.22 }, { do: () => BC.setScene('overworld', { key, px, py, dir: 'down' }) }, { fadeIn: 0, dur: 0.22 }
@@ -73,6 +75,7 @@
   S.bar = {
     enter(args) {
       const g = BC.game;
+      if (BC.audio && BC.audio.setBackingMode) BC.audio.setBackingMode(false); // in case karaoke was abandoned
       this.def = BC.bars[args.id];
       this.id = args.id;
       if (args.ret) this.ret = args.ret;
