@@ -115,8 +115,8 @@
     canvas = document.getElementById('game');
     ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
-    // render at 2x backing resolution (512x480) for crisper text; all game
-    // code keeps drawing in 256x240 logical space.
+    // render at a higher backing resolution (3x: 768x720) for crisper text; all
+    // game code keeps drawing in 256x240 logical space.
     BC.RES = (canvas.width / BC.W) || 1;
     ctx.scale(BC.RES, BC.RES);
     BC.canvas = canvas;
