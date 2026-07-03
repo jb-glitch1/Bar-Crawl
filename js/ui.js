@@ -188,11 +188,17 @@
       const x = 10, y = H - 64, w = W - 20, h = 54;
       BC.panel(ctx, x, y, w, h);
       const page = dialogue.pages[dialogue.idx] || [];
+      const hasP = !!dialogue.opts.portrait;
+      if (hasP) { // a little framed bust of whoever's talking
+        BC.panel(ctx, x + 2, y - 32, 28, 30);
+        pixelPortrait(ctx, x + 4, y - 29, dialogue.opts.portrait, dialogue.opts.portraitKind);
+      }
       if (dialogue.opts.speaker) {
-        BC.text(ctx, dialogue.opts.speaker, x + 6, y - 9, { color: '#ffe27a', size: 8 });
+        BC.text(ctx, dialogue.opts.speaker, x + (hasP ? 34 : 6), y - 9, { color: '#ffe27a', size: 8 });
       }
       const col = dialogue.opts.robot ? '#7ad0ff' : '#eef';
-      page.forEach((ln, i) => BC.text(ctx, ln, x + 8, y + 8 + i * 13, { color: col, size: 9 }));
+      const brown = BC.game && BC.game.brownout && BC.game.brownout();
+      page.forEach((ln, i) => BC.text(ctx, brown ? BC.util.drunkify(ln, 3, i) : ln, x + 8, y + 8 + i * 13, { color: col, size: 9 }));
       if ((dialogue.blink % 0.8) < 0.4) {
         BC.text(ctx, dialogue.idx < dialogue.pages.length - 1 ? '▼' : '■', x + w - 14, y + h - 14, { color: '#fff', size: 8 });
       }
@@ -271,6 +277,32 @@
   };
 
   function prettyItem(id) { return BC.game.itemName(id); }
+
+  // a chunky 24x24 bust rendered from an actor's palette (+ hat) or a dog's
+  function pixelPortrait(ctx, px, py, colors, kind) {
+    const C = Object.assign({ skin: '#e8b890', hair: '#3a2a1f', shirt: '#c0444f', body: '#9a6a3a', dark: '#6a4a26' }, colors || {});
+    BC.rect(ctx, px, py, 24, 24, '#101018');
+    if (kind === 'dog') {
+      BC.rect(ctx, px + 4, py + 4, 4, 5, C.dark); BC.rect(ctx, px + 16, py + 4, 4, 5, C.dark); // ears
+      BC.rect(ctx, px + 4, py + 7, 16, 12, C.body);
+      BC.rect(ctx, px + 8, py + 12, 2, 2, '#1a1a1a'); BC.rect(ctx, px + 14, py + 12, 2, 2, '#1a1a1a');
+      BC.rect(ctx, px + 10, py + 16, 4, 3, '#1a1a1a'); // snoot
+      return;
+    }
+    BC.rect(ctx, px + 4, py + 8, 16, 12, C.skin);   // face
+    BC.rect(ctx, px + 4, py + 4, 16, 6, C.hair);    // hair
+    BC.rect(ctx, px + 8, py + 14, 2, 2, '#1a1a22'); BC.rect(ctx, px + 14, py + 14, 2, 2, '#1a1a22'); // eyes
+    BC.rect(ctx, px + 10, py + 18, 4, 1, 'rgba(60,30,20,0.8)');
+    BC.rect(ctx, px + 4, py + 20, 16, 4, C.shirt);  // shoulders
+    const hat = C.hat;
+    if (hat === 'santa') { BC.rect(ctx, px + 4, py + 4, 16, 3, '#e8e8ee'); BC.rect(ctx, px + 4, py, 14, 4, '#c03434'); BC.rect(ctx, px + 18, py, 4, 4, '#fff'); }
+    else if (hat === 'elf') { BC.rect(ctx, px + 4, py + 3, 16, 3, '#2a7d3a'); BC.rect(ctx, px + 8, py, 6, 3, '#2a7d3a'); BC.rect(ctx, px + 15, py, 3, 3, '#ffd166'); }
+    else if (hat === 'fedora') { BC.rect(ctx, px + 2, py + 6, 20, 2, '#1c1c22'); BC.rect(ctx, px + 6, py, 12, 6, '#33333c'); }
+    else if (hat === 'chef') { BC.rect(ctx, px + 4, py, 16, 6, '#f4f4f8'); BC.rect(ctx, px + 2, py, 5, 4, '#f4f4f8'); BC.rect(ctx, px + 17, py, 5, 4, '#f4f4f8'); }
+    else if (hat === 'cap') { BC.rect(ctx, px + 4, py + 2, 16, 4, '#c4423a'); BC.rect(ctx, px + 16, py + 5, 6, 2, '#a03028'); }
+    else if (hat === 'lei') { BC.rect(ctx, px + 5, py + 21, 2, 2, '#ff6b9a'); BC.rect(ctx, px + 9, py + 21, 2, 2, '#ffe27a'); BC.rect(ctx, px + 13, py + 21, 2, 2, '#7ad0ff'); BC.rect(ctx, px + 17, py + 21, 2, 2, '#ff6b9a'); }
+    else if (hat === 'bow') { BC.rect(ctx, px + 9, py + 20, 6, 3, '#5a2030'); BC.rect(ctx, px + 11, py + 20, 2, 3, '#1a1a22'); }
+  }
 
   BC.ui = ui;
 })();

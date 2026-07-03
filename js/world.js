@@ -256,7 +256,7 @@
   function cabRide(g, hereKey) {
     if (g.run.cash < 8) { BC.ui.toast('"Eight bucks, pal. The meter doesn\'t do IOUs."'); return; }
     const visited = Object.keys(g.run.flags.visited || {}).filter(k => k !== hereKey);
-    if (!visited.length) { BC.ui.say(['"You\'ve only been HERE. Walk somewhere first, then we\'ll talk."'], { speaker: 'Cabbie' }); return; }
+    if (!visited.length) { BC.ui.say(['"You\'ve only been HERE. Walk somewhere first, then we\'ll talk."'], { speaker: 'Cabbie', portrait: { shirt: '#3a3a44', hair: '#222', hat: 'cap' } }); return; }
     const names = visited.map(k => BC.world.screens[k].name);
     BC.ui.choose('CAB - $8 flat. Where to?', names.concat(['Never mind']), (i) => {
       if (i < 0 || i >= visited.length) return;
@@ -380,13 +380,6 @@
     addCab(S['1,0'], '1,0', 2, 6);
     addCab(S['1,1'], '1,1', 2, 6);
     addCab(S['1,2'], '1,2', 2, 6);
-    // district dressing
-    const deco = (k, tx, ty, type) => { if (S[k]) S[k].meta.props.push({ tx, ty, type }); };
-    deco('0,2', 10, 5, 'bench'); deco('0,2', 12, 10, 'bench');
-    deco('2,2', 11, 4, 'bench'); deco('0,1', 13, 5, 'bench');
-    deco('0,0', 12, 11, 'hydrant'); deco('1,1', 3, 11, 'hydrant');
-    deco('1,2', 11, 5, 'planter'); deco('2,0', 6, 4, 'planter');
-
     makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
       { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: (g) => g.loopPick([
         [0, ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.']],
@@ -396,6 +389,19 @@
       { x: 110, y: 56, type: 'dog', colors: { body: '#8a8a8a' }, name: 'Echo' },
       { x: 60, y: 198, type: 'dog', colors: { body: '#777', dark: '#3a3a3a' }, name: 'Raccoon', gig: 'raccoon' }
     ] });
+
+    // Gary is always somewhere else, late for the thing (one screen per loop)
+    const GARY = [['0,0', 210, 170], ['2,0', 70, 90], ['1,1', 60, 190], ['0,2', 190, 180], ['2,1', 70, 170], ['1,2', 190, 90], ['0,1', 200, 190], ['2,2', 80, 90]];
+    GARY.forEach(([k, gx, gy]) => S[k].meta.actors.push({ x: gx, y: gy, type: 'person', gary: true, colors: { shirt: '#e07a2a', hair: '#4a3020' }, name: 'Gary (?)', gig: 'gary' }));
+    // and someone who only exists at the edge of a blackout
+    S['0,0'].meta.actors.push({ x: 224, y: 100, type: 'person', brownoutOnly: true, colors: { shirt: '#c0444f', hair: '#2f2218' }, name: 'Future You', gig: 'futureself' });
+
+    // district dressing
+    const deco = (k, tx, ty, type) => { if (S[k]) S[k].meta.props.push({ tx, ty, type }); };
+    deco('0,2', 10, 5, 'bench'); deco('0,2', 12, 10, 'bench');
+    deco('2,2', 11, 4, 'bench'); deco('0,1', 13, 5, 'bench');
+    deco('0,0', 12, 11, 'hydrant'); deco('1,1', 3, 11, 'hydrant');
+    deco('1,2', 11, 5, 'planter'); deco('2,0', 6, 4, 'planter');
   }
 
   const world = {

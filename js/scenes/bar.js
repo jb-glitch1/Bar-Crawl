@@ -185,7 +185,7 @@
           BC.ui.toast('You pet ' + n.name + '. The bar falls silent in respect.', { good: true });
           BC.audio && BC.audio.sfx('confirm');
           if (BC.fx) BC.fx.hearts(n.x, n.y - 8, 3);
-          if (n.lines) BC.ui.say(n.lines, { speaker: n.name });
+          if (n.lines) BC.ui.say(n.lines, { speaker: n.name, portrait: n.colors });
           return;
         case 'challenge': return this.talkChallenge(n);
         case 'password_giver': return this.talkPassword(n);
@@ -195,7 +195,7 @@
         case 'nicelist': return this.talkNice(n);
         case 'speakeasy': return this.talkSpeakeasy(n);
         case 'eatery': return this.talkEatery(n);
-        default: return BC.ui.say(n.lines || ['...'], { speaker: n.name });
+        default: return BC.ui.say(n.lines || ['...'], { speaker: n.name, portrait: n.colors });
       }
     },
 
@@ -205,11 +205,17 @@
       const drink = bar.drink || { name: 'a drink', amount: 12 };
       // some challenges keep hours — routing is the puzzle
       if (bar.opensAt && g.run.minutes < bar.opensAt) {
-        BC.ui.say(bar.hoursMsg || ['"We start later. Come back."'], { speaker: n.name });
+        BC.ui.say(bar.hoursMsg || ['"We start later. Come back."'], { speaker: n.name, portrait: n.colors });
+        return;
+      }
+      // Gary's brother, at last
+      if (id === 'hail_mary' && g.knows('gary_thing') && !g.run.flags.garyHi) {
+        g.run.flags.garyHi = true;
+        BC.ui.say(['"...GARY says hi? GARY?? He has never ONCE made it by eight."', '"The thing STARTED as a way to get him out of the house. Don\'t tell him."'], { speaker: n.name, portrait: n.colors });
         return;
       }
       if (g.hasStamp(id)) {
-        BC.ui.say(n.repeat || ['Good to see you again.'], { speaker: n.name }, () => {
+        BC.ui.say(n.repeat || ['Good to see you again.'], { speaker: n.name, portrait: n.colors }, () => {
           const opts = ['Play again  (best: ' + g.highScore(id) + ')'];
           if (!noBooze) opts.push('Order ' + drink.name + ' (+tipsy)');
           opts.push('Leave it');
@@ -221,7 +227,7 @@
       } else {
         // regulars skip the pitch; ordering a drink is part of taking on the bar
         const greet = g.meta.mastered[id] ? ['"The usual?"'] : (n.greet || ['Ready?']);
-        BC.ui.say(greet, { speaker: n.name }, () => {
+        BC.ui.say(greet, { speaker: n.name, portrait: n.colors }, () => {
           if (noBooze) {
             BC.ui.choose('Take it on?', ["Let's go", 'Maybe later'], (i) => {
               if (i === 0) BC.startChallenge(type, id);
@@ -247,36 +253,36 @@
       const g = BC.game;
       if (g.tipsyTier() >= 1) {
         g.learn('password');
-        BC.ui.say(['*leans in, conspiratorial*', '"Psst. Tonight\'s word at Reggie\'s is... ' + n.password + '." *taps nose*'], { speaker: n.name });
+        BC.ui.say(['*leans in, conspiratorial*', '"Psst. Tonight\'s word at Reggie\'s is... ' + n.password + '." *taps nose*'], { speaker: n.name, portrait: n.colors });
       } else {
-        BC.ui.say(n.lines || ['...'], { speaker: n.name });
+        BC.ui.say(n.lines || ['...'], { speaker: n.name, portrait: n.colors });
       }
     },
 
     talkIngredient(n) {
       const g = BC.game, q = BC.quests.cocktail;
-      if (!q.active(g)) { BC.ui.say(n.lines || ['...'], { speaker: n.name }); return; }
-      if (q.has(g, n.ingredient)) { BC.ui.say(['You already grabbed that one.'], { speaker: n.name }); return; }
+      if (!q.active(g)) { BC.ui.say(n.lines || ['...'], { speaker: n.name, portrait: n.colors }); return; }
+      if (q.has(g, n.ingredient)) { BC.ui.say(['You already grabbed that one.'], { speaker: n.name, portrait: n.colors }); return; }
       q.give(g, n.ingredient);
       const ing = q.ingredients.find(i => i.id === n.ingredient);
       BC.ui.toast('Got: ' + (ing ? ing.label : n.ingredient), { good: true });
       BC.audio && BC.audio.sfx('stamp');
-      BC.ui.say(['"For the perfect cocktail? Take it."'], { speaker: n.name });
+      BC.ui.say(['"For the perfect cocktail? Take it."'], { speaker: n.name, portrait: n.colors });
     },
 
     talkCocktail(n) {
       const g = BC.game, q = BC.quests.cocktail;
-      if (g.hasStamp('cocktail')) { BC.ui.say(['"Perfection. I\'ll never forget it. ...probably."'], { speaker: n.name }); return; }
+      if (g.hasStamp('cocktail')) { BC.ui.say(['"Perfection. I\'ll never forget it. ...probably."'], { speaker: n.name, portrait: n.colors }); return; }
       if (!q.active(g)) {
         q.start(g);
-        BC.ui.say(['"Make me the PERFECT cocktail.', 'I need three things, from three bars:', 'mint (Pour Decisions), top-shelf whiskey (The Sticky Floor), and a tiny umbrella (Off-Key West)."'], { speaker: n.name });
+        BC.ui.say(['"Make me the PERFECT cocktail.', 'I need three things, from three bars:', 'mint (Pour Decisions), top-shelf whiskey (The Sticky Floor), and a tiny umbrella (Off-Key West)."'], { speaker: n.name, portrait: n.colors });
         return;
       }
       if (q.complete(g)) {
-        BC.ui.say(['You combine the three. The patron sips. A single tear forms.', '"...Perfect."'], { speaker: n.name }, () => g.earnStamp('cocktail'));
+        BC.ui.say(['You combine the three. The patron sips. A single tear forms.', '"...Perfect."'], { speaker: n.name, portrait: n.colors }, () => g.earnStamp('cocktail'));
         return;
       }
-      BC.ui.say(['"Still missing: ' + q.needList(g).join(', ') + '."'], { speaker: n.name });
+      BC.ui.say(['"Still missing: ' + q.needList(g).join(', ') + '."'], { speaker: n.name, portrait: n.colors });
     },
 
     talkDeja(n) {
@@ -284,31 +290,31 @@
       if (g.hasStamp('deja_brew')) {
         BC.ui.say(g.meta.tab >= 21
           ? ['"Back again. Of course you are."', '"Tab\'s at $' + g.meta.tab + ', by the way. We both know money stopped mattering."']
-          : ['"Back again. Of course you are. Time\'s a circle, friend."'], { speaker: n.name });
+          : ['"Back again. Of course you are. Time\'s a circle, friend."'], { speaker: n.name, portrait: n.colors });
         return;
       }
-      BC.ui.say(['*the bartender studies you*', '"...You again. The 5-PM-to-2-AM one. The looper."', '"This is loop number ' + g.meta.loops + ' for you. Give or take."'], { speaker: n.name }, () => {
+      BC.ui.say(['*the bartender studies you*', '"...You again. The 5-PM-to-2-AM one. The looper."', '"This is loop number ' + g.meta.loops + ' for you. Give or take."'], { speaker: n.name, portrait: n.colors }, () => {
         BC.ui.choose('"Quick — do you remember how this night ends?"', ['"...No idea."', '"Every single time."', '"Wait — you KNOW?"'], () => {
           g.earnStamp('deja_brew');
-          BC.ui.say(['*slides you a stamp without being asked*', '"Wanna stop looping? Punch every card. The night you FINISH is the one that lets you wake up tomorrow."', '"...or keep comin\' back. I don\'t mind the company."'], { speaker: n.name });
+          BC.ui.say(['*slides you a stamp without being asked*', '"Wanna stop looping? Punch every card. The night you FINISH is the one that lets you wake up tomorrow."', '"...or keep comin\' back. I don\'t mind the company."'], { speaker: n.name, portrait: n.colors });
         });
       });
     },
 
     talkNice(n) {
       const g = BC.game;
-      if (g.hasStamp('sleigh')) { BC.ui.say(n.repeat || ['Nice List veteran!'], { speaker: n.name }); return; }
+      if (g.hasStamp('sleigh')) { BC.ui.say(n.repeat || ['Nice List veteran!'], { speaker: n.name, portrait: n.colors }); return; }
       this.niceScore = 0;
-      BC.ui.say((n.greet || ['Make the NICE LIST, pal.']).concat(['Three situations. Choose wisely. Santa\'s watching.']), { speaker: n.name }, () => this.runNice(n, 0));
+      BC.ui.say((n.greet || ['Make the NICE LIST, pal.']).concat(['Three situations. Choose wisely. Santa\'s watching.']), { speaker: n.name, portrait: n.colors }, () => this.runNice(n, 0));
     },
     runNice(n, i) {
       const g = BC.game;
       if (i >= NICE.length) {
         if (this.niceScore >= 2) {
           g.earnStamp('sleigh');
-          BC.ui.say(['The elf stamps your card with a candy-cane flourish.', '"NICE LIST. Welcome, pal."'], { speaker: n.name });
+          BC.ui.say(['The elf stamps your card with a candy-cane flourish.', '"NICE LIST. Welcome, pal."'], { speaker: n.name, portrait: n.colors });
         } else {
-          BC.ui.say(['The elf squints. "...Naughty. Be nicer and come back, pal."'], { speaker: n.name });
+          BC.ui.say(['The elf squints. "...Naughty. Be nicer and come back, pal."'], { speaker: n.name, portrait: n.colors });
         }
         return;
       }
@@ -317,15 +323,15 @@
 
     talkSpeakeasy(n) {
       const g = BC.game;
-      if (!g.hasStamp('speakeasy')) { g.earnStamp('speakeasy'); BC.ui.say(n.greet || ['Welcome.'], { speaker: n.name }); }
-      else BC.ui.say(n.repeat || ['Welcome back, VIP.'], { speaker: n.name });
+      if (!g.hasStamp('speakeasy')) { g.earnStamp('speakeasy'); BC.ui.say(n.greet || ['Welcome.'], { speaker: n.name, portrait: n.colors }); }
+      else BC.ui.say(n.repeat || ['Welcome back, VIP.'], { speaker: n.name, portrait: n.colors });
     },
 
     talkEatery(n) {
       const g = BC.game;
       g.eat(22);
       BC.ui.toast('You grab a bite. (a little less tipsy)');
-      BC.ui.say(n.lines || ['Soaks up the night.'], { speaker: n.name });
+      BC.ui.say(n.lines || ['Soaks up the night.'], { speaker: n.name, portrait: n.colors });
     },
 
     leave() {

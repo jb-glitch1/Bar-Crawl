@@ -165,7 +165,11 @@
     let fx = player.x, fy = player.y - 2; const d = player.dir;
     if (d === 'left') fx -= 12; else if (d === 'right') fx += 12; else if (d === 'up') fy -= 12; else fy += 8;
     let best = null, bd = 1e9;
-    for (const a of (screen.meta.actors || [])) { const dd = Math.hypot(a.x - fx, a.y - fy); if (dd < bd) { bd = dd; best = a; } }
+    for (const a of (screen.meta.actors || [])) {
+      if (!actorActive(a)) continue;
+      const dd = Math.hypot(a.x - fx, a.y - fy);
+      if (dd < bd) { bd = dd; best = a; }
+    }
     if (best && bd < 18) { talkActor(best); return; }
 
     const f = frontTile();
@@ -173,6 +177,16 @@
     if (inter) { inter(BC.game, { screenKey, tx: f.tx, ty: f.ty }); return; }
     const t = screen.tiles[f.ty * screen.w + f.tx];
     if (t === BC.world.T.DOOR) BC.ui.toast("It's locked. (For now.)");
+  }
+
+  // some actors only exist under conditions: Gary's screen rotates per loop,
+  // Future You only appears while you're teetering (brownout, 85-99)
+  const GARY_KEYS = ['0,0', '2,0', '1,1', '0,2', '2,1', '1,2', '0,1', '2,2'];
+  function garyKeyForLoop() { return GARY_KEYS[((BC.game && BC.game.meta.loops) || 0) % GARY_KEYS.length]; }
+  function actorActive(a) {
+    if (a.gary) return garyKeyForLoop() === screenKey;
+    if (a.brownoutOnly) return !!(BC.game && BC.game.brownout && BC.game.brownout());
+    return true;
   }
 
   // the cab needs to know where you've been tonight
@@ -210,16 +224,16 @@
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
       markPet(a.name);
-      if (lines) BC.ui.say(lines, { speaker: a.name });
+      if (lines) BC.ui.say(lines, { speaker: a.name, portrait: a.colors, portraitKind: 'dog' });
     } else if (a.type === 'cat') {
       BC.ui.toast('You pet ' + (a.name || 'the cat') + '. It tolerates this. Briefly.', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8, 2);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       markPet(a.name);
-      if (lines) BC.ui.say(lines, { speaker: a.name });
+      if (lines) BC.ui.say(lines, { speaker: a.name, portrait: a.colors, portraitKind: 'dog' });
     } else {
-      BC.ui.say(lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
+      BC.ui.say(lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson', portrait: a.colors });
     }
   }
 
@@ -454,7 +468,7 @@
 
   function drawEntities(ctx, scr) {
     const list = [{ y: player.y, player: true }];
-    for (const a of (scr.meta.actors || [])) list.push({ y: a.y, a });
+    for (const a of (scr.meta.actors || [])) { if (actorActive(a)) list.push({ y: a.y, a }); }
     list.sort((p, q) => p.y - q.y);
     for (const e of list) {
       if (e.player) drawRider(ctx, player.x - 8, player.y - 16, player.dir, player.frame);
@@ -482,6 +496,7 @@
       if (c.dir === 'left' && c.x < -54) c.x = BC.W + 30;
     }
     for (const a of (scr.meta.actors || [])) {
+      if (!actorActive(a)) continue;
       a.t -= dt;
       const far = Math.hypot(a.x - a.hx, a.y - a.hy) > 40;
       if (far) {
@@ -503,7 +518,7 @@
     }
   }
 
-  BC.overworld = { interactFront, frontTile, placeSafe, markPet };
+  BC.overworld = { interactFront, frontTile, placeSafe, markPet, actorActive, garyKeyForLoop };
 
   function startFlip(dir, dx, dy, px, py) {
     const nk = neighbor(dx, dy);

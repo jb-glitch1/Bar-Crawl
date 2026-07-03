@@ -103,7 +103,8 @@
       if (this.run.tipsy > 0) {
         this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerGameMin * gmin);
       }
-      if (this.run.tipsy < 65) this.run.flags.warnBlackout = false; // re-arm the warning after sobering
+      if (this.run.tipsy < 65) { this.run.flags.warnBlackout = false; this.run.flags.brownoutWarned = false; } // re-arm after sobering
+      if (this.brownout() && Math.random() < dt * 0.25 && BC.fx) BC.fx.shake(1.2, 0.18); // the world lurches
       if (this.run.energized > 0) this.run.energized -= dt;
       this._updateMood();
       if (BC.audio) BC.audio.update(this.run.tipsy, this.run.minutes >= this.nightLen() - 60 ? 1 : this.run.minutes >= this.nightLen() - 120 ? 0.5 : 0);
@@ -144,6 +145,11 @@
         this.run.flags.warnBlackout = true;
         BC.ui && BC.ui.toast('Careful — one more big one and you BLACK OUT. Grab food/water.', { good: false });
       }
+      if (this.brownout() && !this.run.flags.brownoutWarned) {
+        this.run.flags.brownoutWarned = true;
+        BC.ui && BC.ui.toast('BROWNOUT. The world is soup. Something flickers near your porch...', { good: false });
+        if (BC.fx) BC.fx.shake(3, 0.5);
+      }
       if (this.run.tipsy >= this.config.blackoutAt) {
         // casual mode is merciful: lose an hour, keep the night
         if (this.meta.mode === 'casual' && BC.flow && BC.flow.softBlackout) BC.flow.softBlackout(this);
@@ -162,6 +168,8 @@
       if (t < 80) return 2;   // drunk
       return 3;               // hammered
     },
+    // 85-99: the brownout band. Brutal, woozy, and the only time Future You exists.
+    brownout() { return !!this.run && this.run.tipsy >= 85 && this.run.tipsy < this.config.blackoutAt; },
 
     // ---- traversal ----
     speedMult() { return (VEHICLE[this.run.vehicle] || VEHICLE.walk).mult * (this.run.energized > 0 ? 1.22 : 1); },

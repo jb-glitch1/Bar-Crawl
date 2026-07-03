@@ -43,7 +43,7 @@
     },
     secretActive() { return BC.game.tipsyTier() >= 1; },
     reticle() {
-      const k = 1 + BC.game.tipsyTier() * 0.5;       // drunk = faster/wider drift
+      const k = 1 + BC.game.tipsyTier() * 0.5 + (BC.game.brownout() ? 0.4 : 0); // drunk = faster/wider drift
       const ax = 40 * (1 + BC.game.tipsyTier() * 0.18);
       const ay = 34 * (1 + BC.game.tipsyTier() * 0.18);
       return { x: CX + Math.sin(this.t * 2.3 * k) * ax, y: CY + Math.sin(this.t * 3.1 * k + 1.2) * ay };
