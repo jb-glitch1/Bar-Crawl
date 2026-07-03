@@ -54,7 +54,7 @@
     _refreshDifficulty() {
       const tier = BC.game.tipsyTier();
       // sober: wide zone, slow sweep. drunk: narrow zone, faster sweep.
-      this.sweetW = Math.max(28, 52 - tier * 8);
+      this.sweetW = Math.max(22, 52 - tier * 8 - (BC.game.brownout() ? 6 : 0));
       // sweet-spot centre drifts a bit when drunk
       const drift = tier >= 2 ? (Math.sin(this.t * 1.8) * 20) : 0;
       this.sweetCX = ZONE_X + ZONE_W / 2 + drift;

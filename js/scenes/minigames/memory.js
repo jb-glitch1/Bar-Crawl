@@ -19,7 +19,7 @@
         return { name: nm, correct, options: shuffle([correct, ...others]) };
       });
       this.phase = 'show';
-      this.timer = Math.max(1.6, 3.4 - BC.game.tipsyTier() * 0.55);
+      this.timer = Math.max(1.2, 3.4 - BC.game.tipsyTier() * 0.55 - (BC.game.brownout() ? 0.4 : 0));
       this.idx = 0; this.sel = 0; this.right = 0;
     },
 

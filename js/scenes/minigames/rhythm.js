@@ -59,7 +59,7 @@
         this.notes.push({ lane: s.lane, pitch: s.pitch, y: -10, alive: true });
         this.spawnIdx++;
       }
-      const win = Math.max(12, 18 - BC.game.tipsyTier() * 2);
+      const win = Math.max(10, 18 - BC.game.tipsyTier() * 2 - (BC.game.brownout() ? 2 : 0));
       for (const n of this.notes) {
         if (!n.alive) continue;
         n.y += SPEED * dt;

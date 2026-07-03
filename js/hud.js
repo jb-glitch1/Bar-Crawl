@@ -51,7 +51,9 @@
     const w = 64, h = 15, x = BC.W - w - 3, y = 3;
     pill(ctx, x, y, w, h);
     const tier = g.tipsyTier();
-    const name = tier === 3 ? ['WASTED', 'POET MODE', 'SO BRAVE'][(((BC.now || 0) / 4) | 0) % 3] : TIERS[tier];
+    const name = (g.brownout && g.brownout())
+      ? ((((BC.now || 0) * 1.5) | 0) % 2 ? 'BROWNOUT' : 'CAREFUL.')
+      : tier === 3 ? ['WASTED', 'POET MODE', 'SO BRAVE'][(((BC.now || 0) / 4) | 0) % 3] : TIERS[tier];
     BC.text(ctx, name, x + 5, y + 2, { size: 7, color: COLS[tier] });
     const bx = x + 5, by = y + 10, bw = w - 10;
     BC.rect(ctx, bx, by, bw, 3, '#222');
