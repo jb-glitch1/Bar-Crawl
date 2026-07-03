@@ -56,5 +56,6 @@
     const bx = x + 5, by = y + 10, bw = w - 10;
     BC.rect(ctx, bx, by, bw, 3, '#222');
     BC.rect(ctx, bx, by, Math.max(0, bw * g.run.tipsy / 100), 3, COLS[tier]);
+    BC.rect(ctx, bx + ((bw * 0.8) | 0), by - 1, 1, 5, '#e8e8f4'); // blackout-danger notch (not color-only)
   }
 })();

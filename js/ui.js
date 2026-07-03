@@ -235,6 +235,7 @@
       BC.rect(ctx, bx, yy, bw, bh, '#222');
       const tcol = r.tipsy < 50 ? '#7ed07e' : r.tipsy < 80 ? '#ffd166' : '#ff6b6b';
       BC.rect(ctx, bx + 1, yy + 1, Math.max(0, (bw - 2) * r.tipsy / 100), bh - 2, tcol);
+      BC.rect(ctx, bx + 1 + (((bw - 2) * 0.8) | 0), yy - 1, 1, bh + 2, '#dfe'); // danger notch
       ctx.strokeStyle = '#556'; ctx.strokeRect(bx + 0.5, yy + 0.5, bw - 1, bh - 1);
       yy += 16;
       const vlabel = g.VEHICLE[r.vehicle].label + (r.vehicle === 'scooter' ? ' (' + r.scooterPct + '%)' : '');
