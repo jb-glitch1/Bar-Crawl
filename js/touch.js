@@ -63,7 +63,7 @@
     // tap the play area itself = A (advance dialogue / interact / confirm)
     const cv = document.getElementById('game');
     if (cv) {
-      cv.addEventListener('pointerdown', (e) => { BC.input.touch('a', true); e.preventDefault(); });
+      cv.addEventListener('pointerdown', (e) => { try { cv.setPointerCapture(e.pointerId); } catch (err) {} BC.input.touch('a', true); e.preventDefault(); });
       const up = () => BC.input.touch('a', false);
       cv.addEventListener('pointerup', up);
       cv.addEventListener('pointercancel', up);

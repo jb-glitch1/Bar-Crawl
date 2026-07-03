@@ -45,14 +45,9 @@
   }
 
   // Build an option list that tracks which index is the "correct" one.
-  function buildOptions(notes, tier) {
-    // Map each note to { text, correct }
-    const opts = notes.map((t, i) => ({ text: t, correct: i === 0 }));
-    // At tier >= 2 (drunk), shuffle order so player can't rely on position memory.
-    if (tier >= 2) {
-      return shuffle(opts);
-    }
-    return opts;
+  // Always shuffled — the correct note living at slot 1 was a free win.
+  function buildOptions(notes) {
+    return shuffle(notes.map((t, i) => ({ text: t, correct: i === 0 })));
   }
 
   S.mg_tasting = {
@@ -71,7 +66,7 @@
 
     _buildRound() {
       const r = ROUNDS[this.roundIdx];
-      this.opts = buildOptions(r.notes, BC.game ? BC.game.tipsyTier() : 0);
+      this.opts = buildOptions(r.notes);
       this.sel = 0;
       this.phase = 'action';
       this.actionTimer = 1.8;

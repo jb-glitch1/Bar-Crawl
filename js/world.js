@@ -96,6 +96,7 @@
       }
       case T.TREE:
         gfx(ctx, x, y, '#5aa45f');
+        gfx(ctx, x + 2, y + 12, 'rgba(0,0,0,0.18)', 12, 3); // canopy shadow
         gfx(ctx, x + 7, y + 9, '#7a5630', 2, 6);
         gfx(ctx, x + 3, y + 1, '#2f8a44', 10, 9);
         gfx(ctx, x + 5, y + 2, '#46a85a', 6, 5);
@@ -232,8 +233,9 @@
 
   function cornerStore(g) {
     BC.ui.choose('CORNER STORE   (you have $' + g.run.cash + ')', [
-      'Energy Drink - $4  (sober up + get wired)',
-      'Bottled Water - $1  (a small sober-up)',
+      'Energy Drink $4 (sober + wired)',
+      'Bottled Water $1 (small sober-up)',
+      'Dbl Espresso $3 (time runs slow)',
       'Leave'
     ], (i) => {
       if (i === 0) {
@@ -242,8 +244,34 @@
       } else if (i === 1) {
         if (g.run.cash >= 1) { g.run.cash -= 1; g.eat(10); BC.ui.toast('Hydration. Responsible of you.'); BC.audio && BC.audio.sfx('confirm'); }
         else BC.ui.toast('"That one\'s not free either, pal."');
+      } else if (i === 2) {
+        if (g.run.cash >= 3) { g.run.cash -= 3; g.run.espresso = 120; BC.ui.toast('The night stretches. Your left eye twitches.', { good: true }); BC.audio && BC.audio.sfx('confirm'); }
+        else BC.ui.toast('"Espresso runs on money, pal. Like me."');
       }
     });
+  }
+
+  // flat-rate cab between districts you've already visited tonight
+  const CABBIE = ['"In and out. I know every pothole personally."', '"That\'s $8 and one story I won\'t repeat."', '"Seatbelt. This town has ROUNDABOUTS."'];
+  function cabRide(g, hereKey) {
+    if (g.run.cash < 8) { BC.ui.toast('"Eight bucks, pal. The meter doesn\'t do IOUs."'); return; }
+    const visited = Object.keys(g.run.flags.visited || {}).filter(k => k !== hereKey);
+    if (!visited.length) { BC.ui.say(['"You\'ve only been HERE. Walk somewhere first, then we\'ll talk."'], { speaker: 'Cabbie' }); return; }
+    const names = visited.map(k => BC.world.screens[k].name);
+    BC.ui.choose('CAB - $8 flat. Where to?', names.concat(['Never mind']), (i) => {
+      if (i < 0 || i >= visited.length) return;
+      g.run.cash -= 8;
+      const key = visited[i];
+      BC.ui.cutscene([
+        { fadeOut: 1, dur: 0.3 },
+        { do: () => { BC.audio && BC.audio.sfx('confirm'); BC.setScene('overworld', { key, px: 7 * 16 + 8, py: 10 * 16 + 8, dir: 'down' }); BC.ui.toast(BC.util.choice(CABBIE)); } },
+        { fadeIn: 0, dur: 0.35 }
+      ]);
+    });
+  }
+  function addCab(s, key, tx, ty) {
+    s.meta.props.push({ tx, ty, type: 'cab' });
+    s.meta.interactions[tx + ',' + ty] = (g) => cabRide(g, key);
   }
 
   // Lassie side-gag: Scout leads you to the old well; you fish out a guy for cash.
@@ -265,6 +293,7 @@
   }
 
   function speakeasyGate(g, ret) {
+    if (g.run.minutes < 300) { BC.ui.toast('A note on the fridge shop: "Back at 10 PM. Even secrets keep hours."'); return; }
     if (g.tipsyTier() < 1) { BC.ui.toast('"Reggie\'s Reliable Refrigeration." Closed. Smells of freon and secrets.'); return; }
     if (!g.knows('password')) { BC.ui.say(['A slot slides open. "Password?"', '...you\'ve got nothing. Maybe somebody tipsy knows it.'], { speaker: 'The Slot' }); return; }
     BC.enterBar('speakeasy', ret);
@@ -285,6 +314,10 @@
     const { rows, builds } = lot(opts);
     const E = opts.exits || {};
     const s = fromAscii(name, rows, { spawnTile: T.GRASS, meta: { interactions: {}, props: [], signs: [], buildings: [], actors: opts.actors || [], park: !!opts.park, throughRoad: !!(E.left && E.right) } });
+    // streetlamps beside the crossroads (they pool light after dark)
+    [[5, 6], [10, 9]].forEach(([lx, ly]) => {
+      if (rows[ly][lx] === 'g') s.meta.props.push({ tx: lx, ty: ly, type: 'lamp' });
+    });
     builds.forEach(b => {
       const ext = EXT[b.id] || EXT.home;
       s.meta.buildings.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
@@ -304,7 +337,12 @@
     const X = (u, d, l, r) => ({ up: u, down: d, left: l, right: r });
 
     makeScreen(S, '0,0', 'Maple Street', { exits: X(0, 1, 0, 1), spawn: [4, 11], buildings: [{ quad: 'TL', id: 'tipsy_newt' }, { quad: 'TR', id: 'home' }], trees: [[2, 12], [13, 12]], actors: [
-      { x: 168, y: 198, type: 'person', colors: { shirt: '#2a6ad0' }, name: 'Neighbor', lines: ['Big night ahead? The bars close at 2 AM sharp.', 'Pace yourself. ...Or don\'t. Not my business.'] },
+      { x: 168, y: 198, type: 'person', colors: { shirt: '#2a6ad0' }, name: 'Neighbor', lines: (g) => g.loopPick([
+        [0, ['Big night ahead? The bars close at 2 AM sharp.', 'Pace yourself. ...Or don\'t. Not my business.']],
+        [3, ['Big night ahead? The bars close at— hm.', 'Weird. Crushing sense of reruns.']],
+        [7, ['You know the drill. I know you know.', 'I don\'t know HOW I know.']],
+        [12, ['I\'ve started leaving the porch light on for you.']]
+      ]) },
       { x: 96, y: 206, type: 'dog', colors: { body: '#caa06a' }, name: 'Biscuit' }
     ] });
     makeScreen(S, '1,0', 'Downtown', { exits: X(0, 1, 1, 1), buildings: [{ quad: 'TL', id: 'hail_mary' }, { quad: 'TR', id: 'store' }], actors: [
@@ -333,8 +371,28 @@
     makeScreen(S, '1,2', 'Night Market', { exits: X(1, 0, 1, 1), buildings: [{ quad: 'TL', id: 'sobering_thoughts' }], actors: [
       { x: 64, y: 200, type: 'cat', colors: { body: '#d08a30', dark: '#a06820' }, name: 'Alley Cat', lines: ['The cat regards you as a peasant. A peasant it has, for now, permitted.'] }
     ] });
+    // scooters parked around town: terrible, glorious sprint tokens
+    addScooter(S['2,0'], 9, 11);
+    addScooter(S['2,1'], 6, 11);
+    addScooter(S['1,2'], 9, 11);
+    // cab stands (learn the spots; $8 flat to anywhere you've been tonight)
+    addCab(S['0,0'], '0,0', 2, 6);
+    addCab(S['1,0'], '1,0', 2, 6);
+    addCab(S['1,1'], '1,1', 2, 6);
+    addCab(S['1,2'], '1,2', 2, 6);
+    // district dressing
+    const deco = (k, tx, ty, type) => { if (S[k]) S[k].meta.props.push({ tx, ty, type }); };
+    deco('0,2', 10, 5, 'bench'); deco('0,2', 12, 10, 'bench');
+    deco('2,2', 11, 4, 'bench'); deco('0,1', 13, 5, 'bench');
+    deco('0,0', 12, 11, 'hydrant'); deco('1,1', 3, 11, 'hydrant');
+    deco('1,2', 11, 5, 'planter'); deco('2,0', 6, 4, 'planter');
+
     makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
-      { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.'] },
+      { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: (g) => g.loopPick([
+        [0, ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.']],
+        [5, ['You\'re getting that look. The loop look.', 'Wear sunscreen. Time is a lazy river.']],
+        [10, ['Loop number ' + g.meta.loops + '. You wear it well.', '...Loops, man.']]
+      ]) },
       { x: 110, y: 56, type: 'dog', colors: { body: '#8a8a8a' }, name: 'Echo' },
       { x: 60, y: 198, type: 'dog', colors: { body: '#777', dark: '#3a3a3a' }, name: 'Raccoon', gig: 'raccoon' }
     ] });
@@ -364,6 +422,24 @@
       for (let ty = 0; ty < screen.h; ty++) {
         for (let tx = 0; tx < screen.w; tx++) {
           drawTile(ctx, screen.tiles[ty * screen.w + tx], ox + tx * 16, oy + ty * 16, tx, ty);
+        }
+      }
+      // edge pass: a soft lip where pavement meets grass, shoreline on water
+      const at = (tx, ty) => (tx < 0 || ty < 0 || tx >= screen.w || ty >= screen.h) ? -1 : screen.tiles[ty * screen.w + tx];
+      for (let ty = 0; ty < screen.h; ty++) {
+        for (let tx = 0; tx < screen.w; tx++) {
+          const t = screen.tiles[ty * screen.w + tx];
+          const x = ox + tx * 16, y = oy + ty * 16;
+          if (t === T.ROAD || t === T.PATH || t === T.SIDEWALK) {
+            if (at(tx, ty - 1) === T.GRASS) gfx(ctx, x, y, 'rgba(20,40,20,0.22)', 16, 2);
+            if (at(tx - 1, ty) === T.GRASS) gfx(ctx, x, y, 'rgba(20,40,20,0.22)', 2, 16);
+          } else if (t === T.WATER) {
+            const sh = 'rgba(220,240,255,0.45)';
+            if (at(tx, ty - 1) >= 0 && at(tx, ty - 1) !== T.WATER) gfx(ctx, x, y, sh, 16, 1);
+            if (at(tx, ty + 1) >= 0 && at(tx, ty + 1) !== T.WATER) gfx(ctx, x, y + 15, sh, 16, 1);
+            if (at(tx - 1, ty) >= 0 && at(tx - 1, ty) !== T.WATER) gfx(ctx, x, y, sh, 1, 16);
+            if (at(tx + 1, ty) >= 0 && at(tx + 1, ty) !== T.WATER) gfx(ctx, x + 15, y, sh, 1, 16);
+          }
         }
       }
     },

@@ -113,6 +113,13 @@
     },
 
     _menu(dt) {
+      if (BC.input.pressed('a')) { // Z flips the sound while the menu is open
+        const g = BC.game;
+        g.meta.sound = !g.meta.sound;
+        BC.audio && BC.audio.setMuted(!g.meta.sound);
+        g.save();
+        BC.audio && BC.audio.sfx('blip');
+      }
       if (BC.input.pressed('start') || BC.input.pressed('b')) {
         menu = false; BC.audio && BC.audio.sfx('cancel');
       }
@@ -168,9 +175,12 @@
         const a = t.t > t.dur - 0.4 ? (t.dur - t.t) / 0.4 : 1;
         ctx.globalAlpha = Math.max(0, a);
         const col = t.robot ? '#7ad0ff' : (t.good ? '#ffe27a' : '#ffffff');
-        BC.text(ctx, t.text, W / 2, y, { color: col, size: 8, align: 'center' });
+        for (const ln of wrap(t.text, 40)) { // pixel font is wider; wrap long toasts
+          BC.text(ctx, ln, W / 2, y, { color: col, size: 8, align: 'center' });
+          y += 11;
+        }
         ctx.globalAlpha = 1;
-        y += 12;
+        y += 2;
       }
     },
 
@@ -195,9 +205,13 @@
       BC.panel(ctx, x, y, w, h);
       choice.lines.forEach((ln, i) => BC.text(ctx, ln, x + 8, y + 6 + i * 11, { color: '#eef', size: 9 }));
       const oy = y + 8 + choice.lines.length * 11;
+      const tier = (BC.game && BC.game.run) ? BC.game.tipsyTier() : 0;
       choice.options.forEach((o, i) => {
         const on = i === choice.sel;
-        BC.text(ctx, (on ? '> ' : '  ') + o, x + 12, oy + i * 13, { color: on ? '#ffe27a' : '#bcd', size: 9 });
+        // your own menu options betray you when you're drunk
+        let label = BC.util.drunkify(o, tier, i);
+        if (tier >= 3 && on && o.length < 22) label += ' (you got this)';
+        BC.text(ctx, (on ? '> ' : '  ') + label, x + 12, oy + i * 13, { color: on ? '#ffe27a' : '#bcd', size: 9 });
       });
     },
 
@@ -221,13 +235,14 @@
       BC.rect(ctx, bx, yy, bw, bh, '#222');
       const tcol = r.tipsy < 50 ? '#7ed07e' : r.tipsy < 80 ? '#ffd166' : '#ff6b6b';
       BC.rect(ctx, bx + 1, yy + 1, Math.max(0, (bw - 2) * r.tipsy / 100), bh - 2, tcol);
+      BC.rect(ctx, bx + 1 + (((bw - 2) * 0.8) | 0), yy - 1, 1, bh + 2, '#dfe'); // danger notch
       ctx.strokeStyle = '#556'; ctx.strokeRect(bx + 0.5, yy + 0.5, bw - 1, bh - 1);
       yy += 16;
       const vlabel = g.VEHICLE[r.vehicle].label + (r.vehicle === 'scooter' ? ' (' + r.scooterPct + '%)' : '');
       row('Getting around', vlabel);
       row('Cash', '$' + r.cash, '#9be29b');
-      const card = g.activeCard();
-      row('Stamps', g.stampCount() + ' / ' + card.length, '#ffe27a');
+      const card = g.activeCard(); // stamps live on the HUD + the map below
+      row('Sound (Z flips)', g.meta.sound ? 'ON' : 'OFF', g.meta.sound ? '#9be29b' : '#ff8a8a');
 
       // town map: 3x3 of screens, gold dot = stamped bar, white box = you are here
       yy += 4;

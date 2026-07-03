@@ -11,7 +11,10 @@
     { q: 'Which is NOT a real cocktail?', o: ['Negroni', 'Sidecar', 'Sad Wizard'], a: 2 },
     { q: 'IPA stands for...', o: ['India Pale Ale', 'Intensely Plain Ale', 'I Prefer Ales'], a: 0 },
     { q: 'Tipping your bartender is...', o: ['optional', 'the right thing to do', 'against the law'], a: 1 },
-    { q: 'A drink "on the rocks" has...', o: ['actual rocks', 'ice', 'gravel'], a: 1 }
+    { q: 'A drink "on the rocks" has...', o: ['actual rocks', 'ice', 'gravel'], a: 1 },
+    { q: 'What time is last call in this town?', o: ['2:00 AM', 'Whenever', 'Time is a circle'], a: 0 },
+    { q: 'Who runs the trash empire on The Fringe?', o: ['A raccoon', 'The city', 'Reggie'], a: 0 },
+    { q: 'The speakeasy hides behind a...', o: ['fridge store', 'library', 'gym'], a: 0 }
   ];
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0;[a[i], a[j]] = [a[j], a[i]]; } return a; }
 

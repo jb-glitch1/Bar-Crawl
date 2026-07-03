@@ -240,17 +240,14 @@
         return;
       }
 
-      // Quit
+      // X opens the cellar menu — Z/taps no longer reset (a stray tap wiped progress)
       if (BC.input.pressed('b')) {
-        if (!this.done) { this.done = true; BC.afterMinigame(this.barId, false); }
-        BC.audio && BC.audio.sfx('cancel');
-        return;
-      }
-
-      // Reset room
-      if (BC.input.pressed('a')) {
-        this._load();
         BC.audio && BC.audio.sfx('blip');
+        var self = this;
+        BC.ui.choose('Kegs looking unpushable?', ['Keep trying', 'Reset the room', 'Leave the cellar'], function (i) {
+          if (i === 1) { self._load(); BC.audio && BC.audio.sfx('blip'); }
+          else if (i === 2 && !self.done) { self.done = true; BC.afterMinigame(self.barId, false); }
+        });
         return;
       }
 
@@ -375,7 +372,7 @@
 
       // Controls hint (bottom strip, only when no caption)
       if (this.captionTimer <= 0 && this.solvedTimer === 0) {
-        BC.text(ctx, 'Z=reset  X=leave', 2, BC.H - 10, { color: '#556', size: 7 });
+        BC.text(ctx, 'X = menu (reset / leave)', 2, BC.H - 10, { color: '#556', size: 7 });
         if (this.hasKey) {
           BC.text(ctx, 'KEY!', BC.W - 28, BC.H - 10, { color: '#ffe27a', size: 7 });
         }

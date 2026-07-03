@@ -10,6 +10,14 @@
     'You regain consciousness at the bus shelter. The bus left hours ago.',
     'You blink awake in a kiddie pool two blocks from anywhere.'
   ];
+  // repeat offenders unlock premium wake-ups
+  function wakeLine(g) {
+    const pool = WAKE.slice();
+    if (g.meta.blackouts >= 2) pool.push('You wake up holding a trophy. It reads: WORLD\'S OKAYEST.');
+    if (g.meta.blackouts >= 3) pool.push('You come to. Scout is guarding you. Good girl, Scout.');
+    if (g.meta.blackouts >= 4) pool.push('You wake up tucked under newspaper. The raccoon wants no thanks.');
+    return U.choice(pool);
+  }
   const LOOP = [
     'Morning. 5:00 PM again, somehow. The night resets — but you remember.',
     'You wake at home. The clock says 5:00 PM. You know things now.',
@@ -45,9 +53,20 @@
   }
 
   BC.flow = {
+    // casual mode: a blackout costs an hour, not the night
+    softBlackout(g) {
+      BC.ui.cutscene([
+        { fadeOut: 1, dur: 0.6, color: '#000' },
+        { text: ['Everything goes sideways... briefly.', 'A kind stranger walks you home. You lose an hour. Casual mode is merciful.'] },
+        { do: () => { g.run.tipsy = 30; g.run.minutes = Math.min(g.nightLen() - 1, g.run.minutes + 60); BC.setScene('home', { skipIntro: true }); } },
+        { fadeIn: 0, dur: 0.6 }
+      ]);
+    },
+
     endNight(reason, won) {
       const g = BC.game;
       if (reason === 'blackout' && BC.fx) BC.fx.shake(4, 0.7);
+      if (reason === 'blackout' && BC.audio && BC.audio.sting) BC.audio.sting('blackout');
       const steps = [];
       steps.push({ fadeOut: 1, dur: 0.8, color: '#000' });
 
@@ -58,7 +77,7 @@
       } else if (reason === 'blackout') {
         steps.push({ text: ['Everything goes... sideways.', 'You black out.'] });
         steps.push({ do: () => dropSomething(g) });
-        steps.push({ text: [U.choice(WAKE)] });
+        steps.push({ text: [wakeLine(g)] });
       }
 
       if (won) {

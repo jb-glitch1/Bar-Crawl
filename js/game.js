@@ -34,6 +34,12 @@
       loops: 0,
       wins: 0,
       bestStamps: 0,
+      blackouts: 0,    // lifetime blackout count — the town remembers
+      lastEnd: null,   // { reason, barId } — how the previous night died
+      tab: 0,          // the Deja Brew tab, in dollars, across all loops
+      mastered: {},    // bars stamped in ANY loop ("regular" status)
+      mode: 'night',   // difficulty: 'casual' | 'night' | 'lastcall'
+      sound: true,     // music/sfx on
       highscores: {},  // per-bar best scores (persist across loops)
       seenIntro: false
     };
@@ -51,6 +57,7 @@
     init() {
       const saved = BC.save.load();
       if (saved && saved.meta) this.meta = Object.assign(freshMeta(), saved.meta);
+      if (BC.audio && BC.audio.setMuted) BC.audio.setMuted(!this.meta.sound);
       this.newRun();
     },
 
@@ -66,6 +73,7 @@
         scooterPct: 0,
         cash: 25,         // nightly budget (corner store energy drinks)
         energized: 0,     // seconds of caffeine speed boost
+        espresso: 0,      // game-minutes of slowed time remaining
         stamps: {},
         flags: {},        // per-run scratch (npc states, quest progress)
         ended: false,
@@ -76,10 +84,21 @@
       this.save();
     },
 
+    // night length varies by difficulty mode
+    nightLen() {
+      if (this.meta.mode === 'casual') return 630;    // ~10:30 hrs of night
+      if (this.meta.mode === 'lastcall') return 450;  // last call comes EARLY
+      return this.config.nightMinutes;
+    },
+
     // ---- time ----
     tick(dt) {
       if (this.paused || !this.run || this.run.ended) return;
-      const gmin = dt * this.config.timeScale;
+      let gmin = dt * this.config.timeScale;
+      if (this.run.espresso > 0) { // double espresso: time crawls, eye twitches
+        gmin *= 0.8;
+        this.run.espresso = Math.max(0, this.run.espresso - gmin);
+      }
       this.run.minutes += gmin;
       if (this.run.tipsy > 0) {
         this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerGameMin * gmin);
@@ -87,13 +106,18 @@
       if (this.run.tipsy < 65) this.run.flags.warnBlackout = false; // re-arm the warning after sobering
       if (this.run.energized > 0) this.run.energized -= dt;
       this._updateMood();
-      if (BC.audio) BC.audio.update(this.run.tipsy);
+      if (BC.audio) BC.audio.update(this.run.tipsy, this.run.minutes >= this.nightLen() - 60 ? 1 : this.run.minutes >= this.nightLen() - 120 ? 0.5 : 0);
+      if (!this.run.flags.lastCallWarned && this.minutesLeft() <= 30) {
+        this.run.flags.lastCallWarned = true;
+        BC.ui && BC.ui.toast('LAST CALL in 30 minutes. Run.', { good: false });
+        BC.audio && BC.audio.sting('lastcall');
+      }
       if (this.allStamps()) { this.endNight('complete'); return; }
-      if (this.run.minutes >= this.config.nightMinutes) this.endNight('lastcall');
+      if (this.run.minutes >= this.nightLen()) this.endNight('lastcall');
     },
 
     timeString() { return U.formatTime(this.run.minutes); },
-    minutesLeft() { return Math.max(0, this.config.nightMinutes - this.run.minutes); },
+    minutesLeft() { return Math.max(0, this.nightLen() - this.run.minutes); },
 
     _updateMood() {
       const m = this.run.minutes;
@@ -111,6 +135,8 @@
     // ---- tipsiness ----
     drink(v) {
       if (!this.run || this.run.ended) return;
+      if (this.meta.mode === 'lastcall') v += 3; // LAST CALL pours heavy
+      this.meta.tab += 7; // it all goes on the tab. the tab is eternal.
       this.run.tipsy = U.clamp(this.run.tipsy + v, 0, 100);
       if (BC.audio) BC.audio.sfx('drink');
       if (BC.fx) BC.fx.bubbles();
@@ -118,7 +144,11 @@
         this.run.flags.warnBlackout = true;
         BC.ui && BC.ui.toast('Careful — one more big one and you BLACK OUT. Grab food/water.', { good: false });
       }
-      if (this.run.tipsy >= this.config.blackoutAt) this.endNight('blackout');
+      if (this.run.tipsy >= this.config.blackoutAt) {
+        // casual mode is merciful: lose an hour, keep the night
+        if (this.meta.mode === 'casual' && BC.flow && BC.flow.softBlackout) BC.flow.softBlackout(this);
+        else this.endNight('blackout');
+      }
     },
     eat(v) {
       if (!this.run || this.run.ended) return;
@@ -141,11 +171,21 @@
       // battery is ALWAYS insultingly low
       this.run.scooterPct = U.randint(7, 27);
       this.run.battery = this.run.scooterPct;
+      this.run.flags.scoot15 = this.run.flags.scoot5 = false;
     },
     drainScooter(dt, moving) {
       if (this.run.vehicle !== 'scooter') return;
       if (moving) this.run.battery -= dt * 1.7; // drops embarrassingly fast
       this.run.scooterPct = Math.max(0, Math.ceil(this.run.battery));
+      // the SCOOT app keeps you emotionally informed
+      if (this.run.battery > 0 && this.run.scooterPct <= 15 && !this.run.flags.scoot15) {
+        this.run.flags.scoot15 = true;
+        BC.ui && BC.ui.toast("SCOOT: Battery low. Have you considered walking? We haven't.", { robot: true });
+      }
+      if (this.run.battery > 0 && this.run.scooterPct <= 5 && !this.run.flags.scoot5) {
+        this.run.flags.scoot5 = true;
+        BC.ui && BC.ui.toast('SCOOT: Please rate your experience while you still can.', { robot: true });
+      }
       if (this.run.battery <= 0) {
         this.run.vehicle = 'walk';
         this.run.battery = 0; this.run.scooterPct = 0;
@@ -182,8 +222,10 @@
       this.run.stamps[id] = true;
       const n = this.stampCount();
       if (n > this.meta.bestStamps) { this.meta.bestStamps = n; this.save(); }
+      this.meta.mastered[id] = true; // "regular" status persists across loops
       BC.ui && BC.ui.toast('* STAMP EARNED: ' + this.stampName(id) + ' *', { good: true });
-      BC.audio && BC.audio.sfx('stamp');
+      if (STAMP_FLAVOR[id] && BC.ui) BC.ui.toast(STAMP_FLAVOR[id], { dur: 3.4 });
+      BC.audio && (BC.audio.sting ? BC.audio.sting('stamp') : BC.audio.sfx('stamp'));
       if (BC.fx) { BC.fx.stars(); BC.fx.shake(2, 0.3); }
     },
     highScore(id) { return this.meta.highscores[id] || 0; },
@@ -203,8 +245,22 @@
       if (!this.run || this.run.ended) return;
       this.run.ended = true;
       this.run.endReason = reason;
+      // remember how the night died — NPCs and headlines bring it up tomorrow
+      this.meta.lastEnd = {
+        reason,
+        barId: (reason === 'blackout' && BC.sceneName === 'bar' && BC.scene && BC.scene.id) ? BC.scene.id : null
+      };
+      if (reason === 'blackout') this.meta.blackouts++;
+      this.save();
       const won = reason === 'complete' || (reason === 'lastcall' && this.allStamps());
       if (BC.flow) BC.flow.endNight(reason, won);
+    },
+
+    // pick flavor text by loop count: [[minLoops, value], ...] — highest match wins
+    loopPick(list) {
+      let v = list[0][1];
+      for (const e of list) if (this.meta.loops >= e[0]) v = e[1];
+      return v;
     }
   };
 
@@ -218,6 +274,23 @@
 
   const ITEM_NAMES = { bike: 'Bike', opener: 'Bottle Opener', map: 'Town Map' };
   game.ITEM_NAMES = ITEM_NAMES;
+
+  // one deadpan line per stamp, toasted right after the earn
+  const STAMP_FLAVOR = {
+    tipsy_newt: 'The stamp is a tiny newt. His name is also Pat.',
+    hail_mary: 'The stamp does a tiny wave. The crowd goes mild.',
+    off_key_west: 'Stamped in glitter. It will outlive you.',
+    pour_decisions: 'The stamp has notes of oak and judgment.',
+    sticky_floor: 'The stamp is... sticky. Of course it is.',
+    speakeasy: 'Reggie stamps it twice. "One\'s for the fridge."',
+    witz_end: 'Stamped, notarized, emotionally devastating.',
+    cellar_door: 'The stamp smells like victory and yeast.',
+    sleigh: 'The stamp smells like peppermint and regret.',
+    sobering_thoughts: 'The stamp is a little burrito at peace.',
+    deja_brew: 'It was somehow already stamped. Don\'t dwell.',
+    cocktail: 'The stamp is a tiny umbrella. Obviously.'
+  };
+  game.STAMP_FLAVOR = STAMP_FLAVOR;
 
   BC.game = game;
   // player movement reads this

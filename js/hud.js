@@ -19,7 +19,7 @@
 
   function stamps(ctx, g) {
     const txt = 'STAMPS ' + g.stampCount() + '/' + g.activeCard().length;
-    const w = txt.length * 5 + 12, x = 3, y = BC.H - 16;
+    const w = txt.length * 6 + 14, x = 3, y = BC.H - 16;
     pill(ctx, x, y, w, 14);
     BC.text(ctx, '*', x + 5, y + 3, { size: 8, color: '#ffe27a' });
     BC.text(ctx, txt, x + 12, y + 3, { size: 8, color: '#ffe27a' });
@@ -33,12 +33,12 @@
   }
 
   function clock(ctx, g) {
-    const x = 3, y = 3, w = 64, h = 15;
+    const x = 3, y = 3, w = 72, h = 15;
     pill(ctx, x, y, w, h);
     const cx = x + 9, cy = y + 8, r = 5;
     ctx.fillStyle = '#12121c'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#cfd2dd'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-    const frac = g.run.minutes / g.config.nightMinutes, a = -Math.PI / 2 + frac * Math.PI * 2;
+    const frac = g.run.minutes / g.nightLen(), a = -Math.PI / 2 + frac * Math.PI * 2;
     ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2)); ctx.stroke();
     BC.text(ctx, g.timeString(), x + 18, y + 2, { size: 8, color: '#dfe7ff' });
@@ -48,12 +48,14 @@
   }
 
   function tipsy(ctx, g) {
-    const w = 56, h = 15, x = BC.W - w - 3, y = 3;
+    const w = 64, h = 15, x = BC.W - w - 3, y = 3;
     pill(ctx, x, y, w, h);
     const tier = g.tipsyTier();
-    BC.text(ctx, TIERS[tier], x + 5, y + 2, { size: 7, color: COLS[tier] });
+    const name = tier === 3 ? ['WASTED', 'POET MODE', 'SO BRAVE'][(((BC.now || 0) / 4) | 0) % 3] : TIERS[tier];
+    BC.text(ctx, name, x + 5, y + 2, { size: 7, color: COLS[tier] });
     const bx = x + 5, by = y + 10, bw = w - 10;
     BC.rect(ctx, bx, by, bw, 3, '#222');
     BC.rect(ctx, bx, by, Math.max(0, bw * g.run.tipsy / 100), 3, COLS[tier]);
+    BC.rect(ctx, bx + ((bw * 0.8) | 0), by - 1, 1, 5, '#e8e8f4'); // blackout-danger notch (not color-only)
   }
 })();

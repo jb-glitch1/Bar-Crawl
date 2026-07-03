@@ -23,9 +23,26 @@
 
   function askAge() {
     BC.audio && BC.audio.ensure();
-    BC.ui.choose('Real quick — are you 21 or older?',
-      ['Yes', 'Obviously', '...also yes (legally distinct)'],
-      { cancelable: false }, () => startNight());
+    const loops = (BC.game && BC.game.meta) ? BC.game.meta.loops : 0;
+    const prompt = loops < 2 ? 'Real quick — are you 21 or older?'
+      : 'Are you 21 or older? (You said yes yesterday. And yesterday. And—)';
+    const opts = loops < 2 ? ['Yes', 'Obviously', '...also yes (legally distinct)']
+      : ['Yes', 'Still yes', 'You literally asked me yesterday'];
+    BC.ui.choose(prompt, opts, { cancelable: false }, () => askMode());
+  }
+
+  function askMode() {
+    const g = BC.game, cur = g.meta.mode || 'night';
+    const tag = (m) => (cur === m ? '  <' : '');
+    BC.ui.choose('How big a night are we talking?', [
+      'Casual - soft blackouts' + tag('casual'),
+      'A night out - the classic' + tag('night'),
+      'LAST CALL - short + strong' + tag('lastcall')
+    ], { cancelable: false }, (i) => {
+      g.meta.mode = ['casual', 'night', 'lastcall'][i];
+      g.save();
+      startNight();
+    });
   }
 
   S.title = {
@@ -35,6 +52,7 @@
       if (phase === 'title' && t > 0.4 && (BC.input.pressed('a') || BC.input.pressed('start'))) {
         phase = 'gate'; askAge();
       }
+      if (phase === 'title' && BC.input.pressed('b')) { BC.setScene('soundtest'); }
     },
     render(ctx) {
       // night sky
@@ -55,9 +73,17 @@
         if ((i % 2) === 0) BC.rect(ctx, i * 16 + 4, 120 - h + 4, 3, 3, '#caa15a');
       }
 
-      // logo
+      // logo (subtitle admits the loop as the loops pile up)
       BC.text(ctx, 'BAR-CRAWL', BC.W / 2, 138, { color: '#ffe27a', size: 28, align: 'center' });
-      BC.text(ctx, 'a night that never ends', BC.W / 2, 168, { color: '#9aa', size: 9, align: 'center' });
+      const loops = (BC.game && BC.game.meta) ? BC.game.meta.loops : 0;
+      const sub = loops <= 1 ? 'a night that never ends'
+        : loops < 8 ? 'a night that STILL never ends'
+        : 'night #' + (loops + 1) + '. hydrate.';
+      BC.text(ctx, sub, BC.W / 2, 168, { color: '#9aa', size: 9, align: 'center' });
+      const meta = BC.game && BC.game.meta;
+      if (meta && meta.bestStamps > 0) {
+        BC.text(ctx, 'best night: ' + meta.bestStamps + '/12 stamps   -   wins: ' + meta.wins, BC.W / 2, 181, { color: '#6a7', size: 8, align: 'center' });
+      }
 
       // little wandering player
       const px = 30 + ((t * 24) % (BC.W - 60));
@@ -66,7 +92,7 @@
       if (phase === 'title' && (t % 1.0) < 0.6) {
         BC.text(ctx, 'Press Z to start', BC.W / 2, 214, { color: '#fff', size: 10, align: 'center' });
       }
-      BC.text(ctx, 'Arrows move  -  Z confirm  -  X bike/cancel  -  M status', BC.W / 2, 232, { color: '#667', size: 7, align: 'center' });
+      BC.text(ctx, 'Z start - M status - X sound test', BC.W / 2, 232, { color: '#667', size: 7, align: 'center' });
     }
   };
 })();

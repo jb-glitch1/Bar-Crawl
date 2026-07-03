@@ -36,7 +36,7 @@
         }
         this.score += pts;
         this.darts.push({ x: r.x, y: r.y, pts });
-        BC.audio && BC.audio.sfx(pts >= 30 ? 'stamp' : pts > 0 ? 'confirm' : 'cancel');
+        BC.audio && BC.audio.sfx(pts >= 30 ? 'stamp' : pts > 0 ? 'confirm' : 'thunk');
         this.throws--;
         if (this.throws <= 0) { this.phase = 'done'; this.pass = this.score >= 70; }
       }

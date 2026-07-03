@@ -20,12 +20,14 @@
       screenKey = (args && args.key) || BC.world.startKey;
       screen = BC.world.screens[screenKey];
       BC.world.here = screenKey;
+      markVisited(screenKey);
       const sp = screen.spawn || { x: 128, y: 120 };
       player = BC.player = new BC.Player(sp.x, sp.y);
       if (args && args.px != null) {
         player.x = args.px; player.y = args.py;
         player.dir = args.dir || 'down';
       }
+      placeSafe(screen, player); // never spawn embedded in a wall
       trans = null; lastDoor = null;
     },
 
@@ -36,6 +38,7 @@
           screenKey = trans.toKey;
           screen = BC.world.screens[screenKey];
           BC.world.here = screenKey;
+          markVisited(screenKey);
           player.x = trans.px; player.y = trans.py;
           placeSafe(screen, player);
           trans = null;
@@ -46,6 +49,11 @@
       player.update(dt, screen);
       const g = BC.game;
       updateAmbient(dt, screen);
+
+      // crickets in the park after dark
+      if (screen.meta.park && BC.world.nightFactor() > 0.5 && Math.random() < dt * 0.35) {
+        BC.audio && BC.audio.sfx('cricket');
+      }
 
       // scooter battery drains embarrassingly fast; parks reject it outright
       g.drainScooter(dt, player.moving);
@@ -107,15 +115,21 @@
         else if (trans.dir === 'left') { fx = W * e; tx = -W + W * e; }
         else if (trans.dir === 'down') { fy = -H * e; ty = H - H * e; }
         else if (trans.dir === 'up') { fy = H * e; ty = -H + H * e; }
-        BC.world.draw(ctx, BC.world.screens[trans.fromKey], fx, fy);
-        drawBuildings(ctx, BC.world.screens[trans.fromKey], fx, fy);
-        BC.world.draw(ctx, BC.world.screens[trans.toKey], tx, ty);
-        drawBuildings(ctx, BC.world.screens[trans.toKey], tx, ty);
+        const sf = BC.world.screens[trans.fromKey], st = BC.world.screens[trans.toKey];
+        BC.world.draw(ctx, sf, fx, fy);
+        drawBuildings(ctx, sf, fx, fy);
+        drawProps(ctx, sf, fx, fy);
+        drawSigns(ctx, sf, fx, fy);
+        BC.world.draw(ctx, st, tx, ty);
+        drawBuildings(ctx, st, tx, ty);
+        drawProps(ctx, st, tx, ty);
+        drawSigns(ctx, st, tx, ty);
         drawRider(ctx, trans.px - 8 + tx, trans.py - 16 + ty, player.dir, 0);
       } else {
         BC.world.draw(ctx, screen, 0, 0);
         drawBuildings(ctx, screen, 0, 0);
         drawProps(ctx, screen, 0, 0);
+        drawGlows(ctx, screen);
         drawDropped(ctx);
         drawCars(ctx, screen, 0, 0);
         drawEntities(ctx, screen);
@@ -161,23 +175,51 @@
     if (t === BC.world.T.DOOR) BC.ui.toast("It's locked. (For now.)");
   }
 
+  // the cab needs to know where you've been tonight
+  function markVisited(key) {
+    const g = BC.game;
+    if (!g || !g.run) return;
+    g.run.flags.visited = g.run.flags.visited || {};
+    g.run.flags.visited[key] = true;
+  }
+
+  // pet every animal in one night -> GOOD PERSON (affects nothing; matters completely)
+  const ALL_PETS = ['Biscuit', 'Rex', 'Daisy', 'Scout', 'Echo', 'Alley Cat'];
+  function markPet(name) {
+    const g = BC.game, f = g.run.flags;
+    f.petted = f.petted || {};
+    if (f.petted[name]) return;
+    f.petted[name] = true;
+    const n = ALL_PETS.filter((p) => f.petted[p]).length;
+    if (n === ALL_PETS.length && !f.goodPerson) {
+      f.goodPerson = true;
+      BC.ui.toast('* GOOD PERSON: every animal petted tonight *', { good: true });
+      BC.audio && BC.audio.sfx('stamp');
+      if (BC.fx) BC.fx.hearts(player.x, player.y - 10, 8);
+    }
+  }
+
   function talkActor(a) {
     if (a.gig && BC.gigs && BC.gigs[a.gig]) { BC.gigs[a.gig](BC.game, a); return; }
+    // lines may be a function of game state (loop-aware dialogue)
+    const lines = (typeof a.lines === 'function') ? a.lines(BC.game) : a.lines;
     if (a.type === 'dog') {
       BC.ui.toast('You pet ' + (a.name || 'the dog') + '. Good dog!', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
-      if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
+      markPet(a.name);
+      if (lines) BC.ui.say(lines, { speaker: a.name });
     } else if (a.type === 'cat') {
       BC.ui.toast('You pet ' + (a.name || 'the cat') + '. It tolerates this. Briefly.', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8, 2);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
-      if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
+      markPet(a.name);
+      if (lines) BC.ui.say(lines, { speaker: a.name });
     } else {
-      BC.ui.say(a.lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
+      BC.ui.say(lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
     }
   }
 
@@ -234,6 +276,35 @@
         BC.rect(ctx, x, y - 6, 16, 5, '#7a3030');                 // roof
         BC.rect(ctx, x, y - 6, 16, 1, '#9a4444');
         BC.rect(ctx, x + 6, y + 1, 4, 3, '#5a3a20');              // bucket
+      } else if (pr.type === 'lamp') {
+        const nf = BC.world.nightFactor();
+        BC.rect(ctx, x + 5, y + 14, 6, 2, 'rgba(0,0,0,0.25)');
+        BC.rect(ctx, x + 7, y - 8, 2, 22, '#3a3a44');            // pole
+        BC.rect(ctx, x + 5, y - 12, 6, 5, '#2c2c34');            // head
+        BC.rect(ctx, x + 6, y - 11, 4, 3, nf > 0.25 ? '#ffe27a' : '#9ab');
+      } else if (pr.type === 'bench') {
+        BC.rect(ctx, x + 1, y + 14, 14, 2, 'rgba(0,0,0,0.2)');
+        BC.rect(ctx, x + 2, y + 9, 2, 5, '#5a4026');
+        BC.rect(ctx, x + 12, y + 9, 2, 5, '#5a4026');
+        BC.rect(ctx, x + 1, y + 6, 14, 3, '#8a6238');
+        BC.rect(ctx, x + 1, y + 2, 14, 2, '#7a5630');
+      } else if (pr.type === 'planter') {
+        BC.rect(ctx, x + 2, y + 8, 12, 7, '#7a4a30');
+        BC.rect(ctx, x + 2, y + 8, 12, 1, '#8f5c3c');
+        BC.gfx.px(ctx, x + 3, y + 3, 4, 5, '#2f8a44');
+        BC.gfx.px(ctx, x + 7, y + 1, 4, 7, '#3c9a52');
+        BC.gfx.px(ctx, x + 11, y + 4, 3, 4, '#2f8a44');
+      } else if (pr.type === 'hydrant') {
+        BC.rect(ctx, x + 5, y + 13, 6, 2, 'rgba(0,0,0,0.25)');
+        BC.rect(ctx, x + 6, y + 5, 4, 9, '#c03434');
+        BC.rect(ctx, x + 5, y + 7, 6, 2, '#d84a4a');
+        BC.rect(ctx, x + 7, y + 3, 2, 2, '#d84a4a');
+      } else if (pr.type === 'cab') {
+        BC.rect(ctx, x + 5, y + 14, 8, 2, 'rgba(0,0,0,0.25)');  // shadow
+        BC.rect(ctx, x + 7, y + 4, 2, 11, '#8a8a92');            // pole
+        BC.rect(ctx, x + 1, y - 2, 14, 8, '#e8c22a');            // yellow sign
+        BC.rect(ctx, x + 1, y - 2, 14, 1, '#fff0a0');
+        BC.text(ctx, 'CAB', x + 8, y - 1, { size: 7, align: 'center', color: '#1a1a1a', shadow: false });
       } else if (pr.type === 'bike') {
         if (BC.game.hasItem('bike')) {
           BC.rect(ctx, x + 2, y + 10, 12, 2, '#556'); // empty rack
@@ -249,6 +320,26 @@
         }
       }
     }
+  }
+
+  // warm pools of light under lamps and doorways once night falls
+  function drawGlows(ctx, scr) {
+    const nf = BC.world.nightFactor();
+    if (nf < 0.25) return;
+    for (const pr of (scr.meta.props || [])) {
+      if (pr.type === 'lamp') glowAt(ctx, pr.tx * 16 + 8, pr.ty * 16 + 12, 20, nf);
+    }
+    for (const b of (scr.meta.buildings || [])) {
+      glowAt(ctx, (b.x + b.w / 2) * 16, (b.y + b.h) * 16 + 3, 20, nf * 0.75); // doorway spill
+    }
+  }
+  function glowAt(ctx, x, y, r, a) {
+    ctx.fillStyle = '#ffd88a';
+    for (const s of [[1, 0.10], [0.62, 0.13], [0.32, 0.16]]) {
+      ctx.globalAlpha = s[1] * a;
+      ctx.beginPath(); ctx.arc(x, y, r * s[0], 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   // the item you lost in a blackout, waiting on its tile (with a come-get-me blink)
@@ -412,7 +503,7 @@
     }
   }
 
-  BC.overworld = { interactFront, frontTile, placeSafe };
+  BC.overworld = { interactFront, frontTile, placeSafe, markPet };
 
   function startFlip(dir, dx, dy, px, py) {
     const nk = neighbor(dx, dy);
