@@ -19,7 +19,7 @@
 
   function stamps(ctx, g) {
     const txt = 'STAMPS ' + g.stampCount() + '/' + g.activeCard().length;
-    const w = txt.length * 5 + 12, x = 3, y = BC.H - 16;
+    const w = txt.length * 6 + 14, x = 3, y = BC.H - 16;
     pill(ctx, x, y, w, 14);
     BC.text(ctx, '*', x + 5, y + 3, { size: 8, color: '#ffe27a' });
     BC.text(ctx, txt, x + 12, y + 3, { size: 8, color: '#ffe27a' });
@@ -33,7 +33,7 @@
   }
 
   function clock(ctx, g) {
-    const x = 3, y = 3, w = 64, h = 15;
+    const x = 3, y = 3, w = 72, h = 15;
     pill(ctx, x, y, w, h);
     const cx = x + 9, cy = y + 8, r = 5;
     ctx.fillStyle = '#12121c'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
@@ -48,7 +48,7 @@
   }
 
   function tipsy(ctx, g) {
-    const w = 56, h = 15, x = BC.W - w - 3, y = 3;
+    const w = 64, h = 15, x = BC.W - w - 3, y = 3;
     pill(ctx, x, y, w, h);
     const tier = g.tipsyTier();
     const name = tier === 3 ? ['WASTED', 'POET MODE', 'SO BRAVE'][(((BC.now || 0) / 4) | 0) % 3] : TIERS[tier];

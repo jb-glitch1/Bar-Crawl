@@ -168,9 +168,12 @@
         const a = t.t > t.dur - 0.4 ? (t.dur - t.t) / 0.4 : 1;
         ctx.globalAlpha = Math.max(0, a);
         const col = t.robot ? '#7ad0ff' : (t.good ? '#ffe27a' : '#ffffff');
-        BC.text(ctx, t.text, W / 2, y, { color: col, size: 8, align: 'center' });
+        for (const ln of wrap(t.text, 40)) { // pixel font is wider; wrap long toasts
+          BC.text(ctx, ln, W / 2, y, { color: col, size: 8, align: 'center' });
+          y += 11;
+        }
         ctx.globalAlpha = 1;
-        y += 12;
+        y += 2;
       }
     },
 

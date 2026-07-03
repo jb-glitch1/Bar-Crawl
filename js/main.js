@@ -51,20 +51,24 @@
     if (BC.scene.enter) BC.scene.enter(args || {});
   };
 
-  // text helper with a crisp 4-direction outline for legibility on any background
-  const OUTLINE = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+  // text via the bitmap pixel font (js/font.js) — crisp at every scale
   BC.text = function (ctx, str, x, y, opt) {
     opt = opt || {};
-    ctx.font = (opt.size || 8) + 'px "Courier New", monospace';
-    ctx.textAlign = opt.align || 'left';
-    ctx.textBaseline = opt.baseline || 'top';
+    const F = BC.font, size = opt.size || 8;
+    str = F.normalize(str);
+    const sc = F.scaleFor(size), w = str.length * 6 * sc;
     x = x | 0; y = y | 0;
+    if (opt.align === 'center') x -= w >> 1;
+    else if (opt.align === 'right') x -= w;
+    if (opt.baseline === 'middle') y -= (7 * sc) >> 1;
     if (opt.shadow !== false) {
-      ctx.fillStyle = opt.shadowColor || 'rgba(0,0,0,0.95)';
-      for (const o of OUTLINE) ctx.fillText(str, x + o[0], y + o[1]);
+      if (opt.shadowColor) { // neon glow: 4-direction halo
+        for (const o of [[-sc, 0], [sc, 0], [0, -sc], [0, sc]]) F.draw(ctx, str, x + o[0], y + o[1], size, opt.shadowColor);
+      } else {
+        F.draw(ctx, str, x + sc, y + sc, size, 'rgba(0,0,0,0.9)'); // retro drop shadow
+      }
     }
-    ctx.fillStyle = opt.color || '#fff';
-    ctx.fillText(str, x, y);
+    F.draw(ctx, str, x, y, size, opt.color || '#fff');
   };
 
   BC.rect = function (ctx, x, y, w, h, c) {
@@ -97,9 +101,22 @@
       if (BC.scene.update && !(BC.ui && BC.ui.blocking)) BC.scene.update(dt);
       if (BC.scene.render) {
         const w = drunkWobble(), sh = BC.fx ? BC.fx.offset() : null;
-        const ox = (w ? w.x : 0) + (sh ? sh.x : 0), oy = (w ? w.y : 0) + (sh ? sh.y : 0);
+        // integer offsets: the world shakes in whole pixels, staying chunky
+        const ox = Math.round((w ? w.x : 0) + (sh ? sh.x : 0));
+        const oy = Math.round((w ? w.y : 0) + (sh ? sh.y : 0));
         if (ox || oy) { ctx.save(); ctx.translate(ox, oy); BC.scene.render(ctx); ctx.restore(); }
         else BC.scene.render(ctx);
+        // hammered: a faint second image drifts (canvas self-composite)
+        if (BC.game && BC.game.run && BC.game.run.tipsy >= 80 && ctx.drawImage &&
+            (BC.sceneName === 'overworld' || BC.sceneName === 'bar')) {
+          try {
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.globalAlpha = 0.14;
+            ctx.drawImage(canvas, Math.round(Math.sin(gtime * 1.1) * 3 * BC.RES), 0);
+            ctx.restore();
+          } catch (e) { /* mocks without drawImage */ }
+        }
       }
     }
     timeTint();

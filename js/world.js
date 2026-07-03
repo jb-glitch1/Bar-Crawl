@@ -96,6 +96,7 @@
       }
       case T.TREE:
         gfx(ctx, x, y, '#5aa45f');
+        gfx(ctx, x + 2, y + 12, 'rgba(0,0,0,0.18)', 12, 3); // canopy shadow
         gfx(ctx, x + 7, y + 9, '#7a5630', 2, 6);
         gfx(ctx, x + 3, y + 1, '#2f8a44', 10, 9);
         gfx(ctx, x + 5, y + 2, '#46a85a', 6, 5);
@@ -232,9 +233,9 @@
 
   function cornerStore(g) {
     BC.ui.choose('CORNER STORE   (you have $' + g.run.cash + ')', [
-      'Energy Drink - $4  (sober up + get wired)',
-      'Bottled Water - $1  (a small sober-up)',
-      'Double Espresso - $3  (time feels slower)',
+      'Energy Drink $4 (sober + wired)',
+      'Bottled Water $1 (small sober-up)',
+      'Dbl Espresso $3 (time runs slow)',
       'Leave'
     ], (i) => {
       if (i === 0) {
@@ -313,6 +314,10 @@
     const { rows, builds } = lot(opts);
     const E = opts.exits || {};
     const s = fromAscii(name, rows, { spawnTile: T.GRASS, meta: { interactions: {}, props: [], signs: [], buildings: [], actors: opts.actors || [], park: !!opts.park, throughRoad: !!(E.left && E.right) } });
+    // streetlamps beside the crossroads (they pool light after dark)
+    [[5, 6], [10, 9]].forEach(([lx, ly]) => {
+      if (rows[ly][lx] === 'g') s.meta.props.push({ tx: lx, ty: ly, type: 'lamp' });
+    });
     builds.forEach(b => {
       const ext = EXT[b.id] || EXT.home;
       s.meta.buildings.push({ id: b.id, x: b.x, y: b.y, w: b.w, h: b.h, dx: b.dx, dy: b.dy, dir: b.dir, ext });
@@ -375,6 +380,12 @@
     addCab(S['1,0'], '1,0', 2, 6);
     addCab(S['1,1'], '1,1', 2, 6);
     addCab(S['1,2'], '1,2', 2, 6);
+    // district dressing
+    const deco = (k, tx, ty, type) => { if (S[k]) S[k].meta.props.push({ tx, ty, type }); };
+    deco('0,2', 10, 5, 'bench'); deco('0,2', 12, 10, 'bench');
+    deco('2,2', 11, 4, 'bench'); deco('0,1', 13, 5, 'bench');
+    deco('0,0', 12, 11, 'hydrant'); deco('1,1', 3, 11, 'hydrant');
+    deco('1,2', 11, 5, 'planter'); deco('2,0', 6, 4, 'planter');
 
     makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
       { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: (g) => g.loopPick([
@@ -411,6 +422,24 @@
       for (let ty = 0; ty < screen.h; ty++) {
         for (let tx = 0; tx < screen.w; tx++) {
           drawTile(ctx, screen.tiles[ty * screen.w + tx], ox + tx * 16, oy + ty * 16, tx, ty);
+        }
+      }
+      // edge pass: a soft lip where pavement meets grass, shoreline on water
+      const at = (tx, ty) => (tx < 0 || ty < 0 || tx >= screen.w || ty >= screen.h) ? -1 : screen.tiles[ty * screen.w + tx];
+      for (let ty = 0; ty < screen.h; ty++) {
+        for (let tx = 0; tx < screen.w; tx++) {
+          const t = screen.tiles[ty * screen.w + tx];
+          const x = ox + tx * 16, y = oy + ty * 16;
+          if (t === T.ROAD || t === T.PATH || t === T.SIDEWALK) {
+            if (at(tx, ty - 1) === T.GRASS) gfx(ctx, x, y, 'rgba(20,40,20,0.22)', 16, 2);
+            if (at(tx - 1, ty) === T.GRASS) gfx(ctx, x, y, 'rgba(20,40,20,0.22)', 2, 16);
+          } else if (t === T.WATER) {
+            const sh = 'rgba(220,240,255,0.45)';
+            if (at(tx, ty - 1) >= 0 && at(tx, ty - 1) !== T.WATER) gfx(ctx, x, y, sh, 16, 1);
+            if (at(tx, ty + 1) >= 0 && at(tx, ty + 1) !== T.WATER) gfx(ctx, x, y + 15, sh, 16, 1);
+            if (at(tx - 1, ty) >= 0 && at(tx - 1, ty) !== T.WATER) gfx(ctx, x, y, sh, 1, 16);
+            if (at(tx + 1, ty) >= 0 && at(tx + 1, ty) !== T.WATER) gfx(ctx, x + 15, y, sh, 1, 16);
+          }
         }
       }
     },

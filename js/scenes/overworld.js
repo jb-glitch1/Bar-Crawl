@@ -124,6 +124,7 @@
         BC.world.draw(ctx, screen, 0, 0);
         drawBuildings(ctx, screen, 0, 0);
         drawProps(ctx, screen, 0, 0);
+        drawGlows(ctx, screen);
         drawDropped(ctx);
         drawCars(ctx, screen, 0, 0);
         drawEntities(ctx, screen);
@@ -270,6 +271,29 @@
         BC.rect(ctx, x, y - 6, 16, 5, '#7a3030');                 // roof
         BC.rect(ctx, x, y - 6, 16, 1, '#9a4444');
         BC.rect(ctx, x + 6, y + 1, 4, 3, '#5a3a20');              // bucket
+      } else if (pr.type === 'lamp') {
+        const nf = BC.world.nightFactor();
+        BC.rect(ctx, x + 5, y + 14, 6, 2, 'rgba(0,0,0,0.25)');
+        BC.rect(ctx, x + 7, y - 8, 2, 22, '#3a3a44');            // pole
+        BC.rect(ctx, x + 5, y - 12, 6, 5, '#2c2c34');            // head
+        BC.rect(ctx, x + 6, y - 11, 4, 3, nf > 0.25 ? '#ffe27a' : '#9ab');
+      } else if (pr.type === 'bench') {
+        BC.rect(ctx, x + 1, y + 14, 14, 2, 'rgba(0,0,0,0.2)');
+        BC.rect(ctx, x + 2, y + 9, 2, 5, '#5a4026');
+        BC.rect(ctx, x + 12, y + 9, 2, 5, '#5a4026');
+        BC.rect(ctx, x + 1, y + 6, 14, 3, '#8a6238');
+        BC.rect(ctx, x + 1, y + 2, 14, 2, '#7a5630');
+      } else if (pr.type === 'planter') {
+        BC.rect(ctx, x + 2, y + 8, 12, 7, '#7a4a30');
+        BC.rect(ctx, x + 2, y + 8, 12, 1, '#8f5c3c');
+        BC.gfx.px(ctx, x + 3, y + 3, 4, 5, '#2f8a44');
+        BC.gfx.px(ctx, x + 7, y + 1, 4, 7, '#3c9a52');
+        BC.gfx.px(ctx, x + 11, y + 4, 3, 4, '#2f8a44');
+      } else if (pr.type === 'hydrant') {
+        BC.rect(ctx, x + 5, y + 13, 6, 2, 'rgba(0,0,0,0.25)');
+        BC.rect(ctx, x + 6, y + 5, 4, 9, '#c03434');
+        BC.rect(ctx, x + 5, y + 7, 6, 2, '#d84a4a');
+        BC.rect(ctx, x + 7, y + 3, 2, 2, '#d84a4a');
       } else if (pr.type === 'cab') {
         BC.rect(ctx, x + 5, y + 14, 8, 2, 'rgba(0,0,0,0.25)');  // shadow
         BC.rect(ctx, x + 7, y + 4, 2, 11, '#8a8a92');            // pole
@@ -291,6 +315,26 @@
         }
       }
     }
+  }
+
+  // warm pools of light under lamps and doorways once night falls
+  function drawGlows(ctx, scr) {
+    const nf = BC.world.nightFactor();
+    if (nf < 0.25) return;
+    for (const pr of (scr.meta.props || [])) {
+      if (pr.type === 'lamp') glowAt(ctx, pr.tx * 16 + 8, pr.ty * 16 + 12, 20, nf);
+    }
+    for (const b of (scr.meta.buildings || [])) {
+      glowAt(ctx, (b.x + b.w / 2) * 16, (b.y + b.h) * 16 + 3, 20, nf * 0.75); // doorway spill
+    }
+  }
+  function glowAt(ctx, x, y, r, a) {
+    ctx.fillStyle = '#ffd88a';
+    for (const s of [[1, 0.10], [0.62, 0.13], [0.32, 0.16]]) {
+      ctx.globalAlpha = s[1] * a;
+      ctx.beginPath(); ctx.arc(x, y, r * s[0], 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   // the item you lost in a blackout, waiting on its tile (with a come-get-me blink)

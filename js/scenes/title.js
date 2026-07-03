@@ -35,9 +35,9 @@
     const g = BC.game, cur = g.meta.mode || 'night';
     const tag = (m) => (cur === m ? '  <' : '');
     BC.ui.choose('How big a night are we talking?', [
-      'Casual stroll (long night, soft blackouts)' + tag('casual'),
-      'A night out (the classic)' + tag('night'),
-      'LAST CALL (short night, heavy pours)' + tag('lastcall')
+      'Casual - soft blackouts' + tag('casual'),
+      'A night out - the classic' + tag('night'),
+      'LAST CALL - short + strong' + tag('lastcall')
     ], { cancelable: false }, (i) => {
       g.meta.mode = ['casual', 'night', 'lastcall'][i];
       g.save();
@@ -91,7 +91,7 @@
       if (phase === 'title' && (t % 1.0) < 0.6) {
         BC.text(ctx, 'Press Z to start', BC.W / 2, 214, { color: '#fff', size: 10, align: 'center' });
       }
-      BC.text(ctx, 'Arrows move  -  Z confirm  -  X bike/cancel  -  M status', BC.W / 2, 232, { color: '#667', size: 7, align: 'center' });
+      BC.text(ctx, 'Z confirm - X cancel - M status', BC.W / 2, 232, { color: '#667', size: 7, align: 'center' });
     }
   };
 })();

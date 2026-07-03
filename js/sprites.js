@@ -30,29 +30,61 @@
     px(ctx, x + 5, y + 14 + (f ? 0 : 1), 2, 1, C.shoe);
     px(ctx, x + 9, y + 14 + (f ? 1 : 0), 2, 1, C.shoe);
 
+    // torso + head bob 1px on the off-step so walking reads as motion
+    const yb = y - (f ? 1 : 0);
+
     // body + arms
-    px(ctx, x + 4, y + 7, 8, 5, C.shirt);
-    px(ctx, x + 3, y + 7, 1, 4, C.shirt);
-    px(ctx, x + 12, y + 7, 1, 4, C.shirt);
-    px(ctx, x + 3, y + 11, 1, 1, C.skin);
-    px(ctx, x + 12, y + 11, 1, 1, C.skin);
+    px(ctx, x + 4, yb + 7, 8, 5, C.shirt);
+    px(ctx, x + 3, yb + 7, 1, 4, C.shirt);
+    px(ctx, x + 12, yb + 7, 1, 4, C.shirt);
+    px(ctx, x + 3, yb + 11, 1, 1, C.skin);
+    px(ctx, x + 12, yb + 11, 1, 1, C.skin);
 
     // head
-    px(ctx, x + 4, y + 2, 8, 6, C.skin);
-    px(ctx, x + 4, y + 1, 8, 2, C.hair);
+    px(ctx, x + 4, yb + 2, 8, 6, C.skin);
+    px(ctx, x + 4, yb + 1, 8, 2, C.hair);
     if (dir === 'down') {
-      px(ctx, x + 4, y + 2, 2, 2, C.hair);
-      px(ctx, x + 10, y + 2, 2, 2, C.hair);
-      px(ctx, x + 6, y + 5, 1, 1, C.eye);
-      px(ctx, x + 9, y + 5, 1, 1, C.eye);
+      px(ctx, x + 4, yb + 2, 2, 2, C.hair);
+      px(ctx, x + 10, yb + 2, 2, 2, C.hair);
+      px(ctx, x + 6, yb + 5, 1, 1, C.eye);
+      px(ctx, x + 9, yb + 5, 1, 1, C.eye);
     } else if (dir === 'up') {
-      px(ctx, x + 4, y + 2, 8, 3, C.hair);
+      px(ctx, x + 4, yb + 2, 8, 3, C.hair);
     } else if (dir === 'left') {
-      px(ctx, x + 9, y + 2, 3, 4, C.hair);   // back of head trails on the right
-      px(ctx, x + 5, y + 5, 1, 1, C.eye);    // face/eye leads on the left
+      px(ctx, x + 9, yb + 2, 3, 4, C.hair);   // back of head trails on the right
+      px(ctx, x + 5, yb + 5, 1, 1, C.eye);    // face/eye leads on the left
     } else if (dir === 'right') {
-      px(ctx, x + 4, y + 2, 3, 4, C.hair);   // back of head trails on the left
-      px(ctx, x + 10, y + 5, 1, 1, C.eye);   // face/eye leads on the right
+      px(ctx, x + 4, yb + 2, 3, 4, C.hair);   // back of head trails on the left
+      px(ctx, x + 10, yb + 5, 1, 1, C.eye);   // face/eye leads on the right
+    }
+
+    // headwear/props give the cast identity (a few rects each)
+    const hat = (col && col.hat) || null;
+    if (hat === 'santa') {
+      px(ctx, x + 4, yb, 8, 2, '#e8e8ee');
+      px(ctx, x + 4, yb - 2, 7, 2, '#c03434');
+      px(ctx, x + 10, yb - 3, 3, 3, '#fff');
+    } else if (hat === 'elf') {
+      px(ctx, x + 4, yb, 8, 2, '#2a7d3a');
+      px(ctx, x + 6, yb - 2, 4, 2, '#2a7d3a');
+      px(ctx, x + 9, yb - 3, 2, 2, '#ffd166');
+    } else if (hat === 'fedora') {
+      px(ctx, x + 3, yb + 1, 10, 1, '#1c1c22');
+      px(ctx, x + 4, yb - 2, 8, 3, '#33333c');
+      px(ctx, x + 4, yb - 1, 8, 1, '#4a4a56');
+    } else if (hat === 'chef') {
+      px(ctx, x + 4, yb - 3, 8, 4, '#f4f4f8');
+      px(ctx, x + 3, yb - 4, 4, 3, '#f4f4f8');
+      px(ctx, x + 9, yb - 4, 4, 3, '#f4f4f8');
+    } else if (hat === 'cap') {
+      px(ctx, x + 4, yb, 8, 2, '#c4423a');
+      px(ctx, x + 10, yb + 1, 4, 1, '#a03028');
+    } else if (hat === 'lei') {
+      px(ctx, x + 5, yb + 7, 1, 1, '#ff6b9a'); px(ctx, x + 7, yb + 7, 1, 1, '#ffe27a');
+      px(ctx, x + 9, yb + 7, 1, 1, '#7ad0ff'); px(ctx, x + 11, yb + 7, 1, 1, '#ff6b9a');
+    } else if (hat === 'bow') {
+      px(ctx, x + 6, yb + 7, 1, 2, '#1a1a22'); px(ctx, x + 9, yb + 7, 1, 2, '#1a1a22');
+      px(ctx, x + 7, yb + 7, 2, 2, '#5a2030');
     }
   };
 

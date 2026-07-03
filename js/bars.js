@@ -55,7 +55,7 @@
       name: 'The Hail Mary', room: INTERIOR, mood: M.sports, door: { key: '1,0', tx: 3, ty: 4 },
       intro: ['The Hail Mary. Forty screens, thirty-nine showing a game you don’t care about.'],
       npcs: [
-        { x: 120, y: 56, dir: 'down', name: 'Trivia Host', colors: { shirt: '#c4423a' }, role: 'challenge', challenge: 'trivia',
+        { x: 120, y: 56, dir: 'down', name: 'Trivia Host', colors: { shirt: '#c4423a', hat: 'cap' }, role: 'challenge', challenge: 'trivia',
           greet: ['TUESDAY TRIVIA, baby! Buzz in, big shot.', 'Get most of ’em right and the stamp is yours.'],
           repeat: ['Our reigning champ returns! No pressure.'] },
         { x: 60, y: 128, dir: 'right', name: 'Superfan', colors: { shirt: '#2a6ad0' }, role: 'password_giver', password: 'FLAMINGO',
@@ -67,7 +67,7 @@
       name: 'Off-Key West', room: INTERIOR, mood: M.karaoke, door: { key: '2,0', tx: 3, ty: 4 },
       intro: ['Off-Key West. Tropical shirts, zero pitch, infinite confidence.'],
       npcs: [
-        { x: 120, y: 56, dir: 'down', name: 'The KJ', colors: { shirt: '#1aa3a3', hair: '#eee' }, role: 'challenge', challenge: 'rhythm',
+        { x: 120, y: 56, dir: 'down', name: 'The KJ', colors: { shirt: '#1aa3a3', hair: '#eee', hat: 'lei' }, role: 'challenge', challenge: 'rhythm',
           greet: ['You’re up next! Hit the notes, ride the wave.', 'Fair warning: the drunker you are, the more they wobble.'],
           repeat: ['Encore! The crowd (one guy) demands it.'] },
         { x: 64, y: 130, dir: 'right', name: 'Tiki Bartender', colors: { shirt: '#d08a2a' }, role: 'ingredient', ingredient: 'umbrella',
@@ -92,7 +92,7 @@
       name: 'Pour Decisions', room: INTERIOR, mood: M.wine, door: { key: '2,0', tx: 12, ty: 4 },
       intro: ['Pour Decisions. Candlelit, smug, and judging your shoes.'],
       npcs: [
-        { x: 120, y: 56, dir: 'down', name: 'Sommelier', colors: { shirt: '#5a2030', hair: '#222' }, role: 'challenge', challenge: 'tasting',
+        { x: 120, y: 56, dir: 'down', name: 'Sommelier', colors: { shirt: '#5a2030', hair: '#222', hat: 'bow' }, role: 'challenge', challenge: 'tasting',
           greet: ['Ah. A "palate." Prove it — describe these vintages.', 'Pretension is rewarded. Honesty is not.'],
           repeat: ['The connoisseur returns. Bravo.'] },
         { x: 64, y: 128, dir: 'right', name: 'Garden Mint', colors: { shirt: '#3a8a5a' }, role: 'ingredient', ingredient: 'mint',
@@ -115,7 +115,7 @@
       name: "Reggie's", room: INTERIOR, mood: M.speak, door: { key: '2,1', tx: 12, ty: 4 },
       intro: ['Behind the fridge: velvet, candlelight, and zero refrigerators. You’re IN.'],
       npcs: [
-        { x: 120, y: 56, dir: 'down', name: 'Reggie', colors: { shirt: '#222', hair: '#111' }, role: 'speakeasy',
+        { x: 120, y: 56, dir: 'down', name: 'Reggie', colors: { shirt: '#222', hair: '#111', hat: 'fedora' }, role: 'speakeasy',
           greet: ['You found us. Most folks just see a sad fridge shop.', 'Welcome to the real party. Stamp’s yours, VIP.'],
           repeat: ['The usual booth’s open, VIP.'] },
         { x: 64, y: 130, dir: 'right', name: 'Lounge Singer', colors: { shirt: '#6a2a4a' }, role: 'flavor',
@@ -149,9 +149,9 @@
       name: "Sleigh It Ain't So", room: INTERIOR, mood: M.xmas, door: { key: '0,2', tx: 3, ty: 4 },
       intro: ['SLEIGH IT AIN’T SO. It is 90 degrees out. Inside: fake snow, real sweat, a heater running next to the AC.'],
       npcs: [
-        { x: 150, y: 56, dir: 'down', name: 'Sweaty Santa', colors: { shirt: '#b23', hair: '#eee' }, role: 'flavor',
+        { x: 150, y: 56, dir: 'down', name: 'Sweaty Santa', colors: { shirt: '#b23', hair: '#eee', hat: 'santa' }, role: 'flavor',
           lines: ['HO ho... ho. *mops brow* Why is the heater ON? COMMITMENT, friend.'] },
-        { x: 96, y: 120, dir: 'down', name: 'Elf Bouncer', colors: { shirt: '#2a7d3a', hair: '#caa' }, role: 'nicelist',
+        { x: 96, y: 120, dir: 'down', name: 'Elf Bouncer', colors: { shirt: '#2a7d3a', hair: '#caa', hat: 'elf' }, role: 'nicelist',
           greet: ['No stamp till you make the NICE LIST, pal.'],
           repeat: ['Nice List veteran! Go on in.'] }
       ]
@@ -163,7 +163,7 @@
       drinkOnWin: 0,
       onStamp: (g) => { g.eat(40); BC.ui.toast('The grease soaks up the night. (much less tipsy)'); },
       npcs: [
-        { x: 120, y: 56, dir: 'down', name: 'Line Cook', colors: { shirt: '#ddd', hair: '#321' }, role: 'challenge', challenge: 'burrito',
+        { x: 120, y: 56, dir: 'down', name: 'Line Cook', colors: { shirt: '#ddd', hair: '#321', hat: 'chef' }, role: 'challenge', challenge: 'burrito',
           greet: ['You want THE EVERYTHING BURRITO. Of course you do.', 'Finish it and you’re a legend. Also you’ll sober right up.'],
           repeat: ['The burrito remembers you. It’s afraid.'] },
         { x: 64, y: 128, dir: 'right', name: 'Short-Order Sage', colors: { shirt: '#aaa' }, role: 'eatery',

@@ -37,6 +37,32 @@
     ]);
   };
 
+  // the iconic glowing shelf of bottles behind any counter
+  function drawBackbar(ctx, scene) {
+    const scr = scene.screen, T = BC.world.T;
+    let minTx = 99, maxTx = -1;
+    for (let ty = 0; ty < scr.h; ty++) for (let tx = 0; tx < scr.w; tx++) {
+      if (scr.tiles[ty * scr.w + tx] === T.COUNTER) { if (tx < minTx) minTx = tx; if (tx > maxTx) maxTx = tx; }
+    }
+    if (maxTx < 0) return;
+    const x0 = minTx * 16 + 2, x1 = maxTx * 16 + 14, y = 4;
+    BC.rect(ctx, x0, y, x1 - x0, 24, 'rgba(14,9,18,0.6)');            // recessed shelf
+    BC.rect(ctx, x0, y + 10, x1 - x0, 1, 'rgba(255,255,255,0.15)');   // shelf lips
+    BC.rect(ctx, x0, y + 21, x1 - x0, 1, 'rgba(255,255,255,0.15)');
+    const cols = ['#7ed07e', '#ffd166', '#ff6b6b', '#7ad0ff', '#d09aff', '#f0a44a'];
+    let h = 0;
+    for (let i = 0; i < scene.id.length; i++) h = ((h * 31 + scene.id.charCodeAt(i)) >>> 0);
+    for (let row = 0; row < 2; row++) {
+      const by = y + 10 + row * 11;
+      for (let bx = x0 + 4; bx < x1 - 5; bx += 8) {
+        h = ((h * 1103515245 + 12345) & 0x7fffffff) >>> 0;
+        const c = cols[h % cols.length], bh = 5 + ((h >> 6) % 4);
+        BC.rect(ctx, bx, by - bh, 3, bh, c);
+        BC.rect(ctx, bx + 1, by - bh - 2, 1, 2, c); // bottle neck
+      }
+    }
+  }
+
   // "be nice" scenarios for the Sleigh It Ain't So elf (option 0 is the nice one)
   const NICE = [
     { q: 'A regular drops their wallet, cash showing. You...', opts: ['Return it, every cent.', '"Finders keepers."', 'Judge their old ID photo.'] },
@@ -309,6 +335,7 @@
     render(ctx) {
       ctx.clearRect(0, 0, BC.W, BC.H);
       BC.world.drawInterior(ctx, this.screen, 0, 0, this.def.palette);
+      drawBackbar(ctx, this);
       // depth-sort furniture, NPCs and the player by their base Y
       const all = [];
       for (const f of (this.furniture || [])) all.push({ y: BC.furniture.footY(f), f });
@@ -323,8 +350,10 @@
       // warm interior vignette (depth + lighting); skipped where gradients aren't supported
       const grd = ctx.createRadialGradient && ctx.createRadialGradient(BC.W / 2, BC.H / 2 - 10, 36, BC.W / 2, BC.H / 2, 175);
       if (grd && grd.addColorStop) { grd.addColorStop(0, 'rgba(255,220,150,0.05)'); grd.addColorStop(0.6, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.42)'); ctx.fillStyle = grd; ctx.fillRect(0, 0, BC.W, BC.H); }
-      // small persistent label (top-center, clear of the HUD corners)
-      BC.text(ctx, this.def.name, BC.W / 2, 4, { color: '#cdd', size: 8, align: 'center' });
+      // small persistent label (top-center, on a backdrop so the back-bar doesn't swallow it)
+      const nm = this.def.name, nw = nm.length * 6 + 10;
+      BC.rect(ctx, (BC.W - nw) / 2, 2, nw, 11, 'rgba(8,8,14,0.72)');
+      BC.text(ctx, nm, BC.W / 2, 4, { color: '#cdd', size: 8, align: 'center' });
       // transient "now entering" title card
       if (this.titleT > 0) {
         let a = 1;
@@ -342,7 +371,7 @@
     },
 
     stampHint() {
-      return BC.game.hasStamp(this.id) ? 'STAMPED * - walk to the door to leave' : 'walk to the door (or press X) to leave';
+      return BC.game.hasStamp(this.id) ? 'stamped * - door to leave' : 'door (or X) to leave';
     }
   };
 })();
