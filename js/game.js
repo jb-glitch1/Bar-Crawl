@@ -166,6 +166,7 @@
     giveItem(id) { this.meta.items[id] = true; this.save(); },
     takeItem(id) { delete this.meta.items[id]; this.save(); },
     itemList() { return Object.keys(this.meta.items); },
+    itemName(id) { return ITEM_NAMES[id] || id; },
     knows(f) { return !!this.meta.knowledge[f]; },
     learn(f) { if (!this.meta.knowledge[f]) { this.meta.knowledge[f] = true; this.save(); } },
 
@@ -214,6 +215,9 @@
     sleigh: "Sleigh It Ain't So", sobering_thoughts: 'Sobering Thoughts', cocktail: 'Perfect Cocktail'
   };
   game.STAMP_NAMES = STAMP_NAMES;
+
+  const ITEM_NAMES = { bike: 'Bike', opener: 'Bottle Opener', map: 'Town Map' };
+  game.ITEM_NAMES = ITEM_NAMES;
 
   BC.game = game;
   // player movement reads this

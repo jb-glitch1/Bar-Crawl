@@ -71,7 +71,7 @@
 
     // called on every scene change: drop transient modals (but keep cutscene/fade,
     // since cutscenes are what drive scene changes)
-    sceneCleanup() { menu = false; dialogue = null; },
+    sceneCleanup() { menu = false; dialogue = null; choice = null; },
 
     update(dt) {
       // toasts
@@ -204,15 +204,15 @@
     _renderMenu(ctx) {
       const g = BC.game, r = g.run;
       BC.rect(ctx, 0, 0, W, H, 'rgba(4,4,10,0.55)');
-      const x = 26, y = 24, w = W - 52, h = H - 60;
+      const x = 26, y = 14, w = W - 52, h = H - 26;
       BC.panel(ctx, x, y, w, h);
       BC.text(ctx, '- STATUS -', W / 2, y + 8, { color: '#ffe27a', size: 10, align: 'center' });
 
-      let yy = y + 28;
+      let yy = y + 26;
       const row = (label, val, col) => {
         BC.text(ctx, label, x + 12, yy, { color: '#9aa', size: 9 });
         BC.text(ctx, val, x + w - 12, yy, { color: col || '#fff', size: 9, align: 'right' });
-        yy += 16;
+        yy += 14;
       };
       row('Time', g.timeString(), '#9ed0ff');
       // tipsiness bar
@@ -222,7 +222,7 @@
       const tcol = r.tipsy < 50 ? '#7ed07e' : r.tipsy < 80 ? '#ffd166' : '#ff6b6b';
       BC.rect(ctx, bx + 1, yy + 1, Math.max(0, (bw - 2) * r.tipsy / 100), bh - 2, tcol);
       ctx.strokeStyle = '#556'; ctx.strokeRect(bx + 0.5, yy + 0.5, bw - 1, bh - 1);
-      yy += 18;
+      yy += 16;
       const vlabel = g.VEHICLE[r.vehicle].label + (r.vehicle === 'scooter' ? ' (' + r.scooterPct + '%)' : '');
       row('Getting around', vlabel);
       row('Cash', '$' + r.cash, '#9be29b');
@@ -230,9 +230,9 @@
       row('Stamps', g.stampCount() + ' / ' + card.length, '#ffe27a');
 
       // town map: 3x3 of screens, gold dot = stamped bar, white box = you are here
-      yy += 6;
+      yy += 4;
       BC.text(ctx, 'Town map  (* = stamped, [] = you)', x + 12, yy, { color: '#9aa', size: 8 }); yy += 12;
-      const mapX = x + 16, mapW = w - 32, cw = mapW / 3, ch = 30, mapY = yy;
+      const mapX = x + 16, mapW = w - 32, cw = mapW / 3, ch = 22, mapY = yy;
       for (let sy = 0; sy < 3; sy++) for (let sx = 0; sx < 3; sx++) {
         const scr = BC.world.screens[sx + ',' + sy]; if (!scr) continue;
         const cx0 = mapX + sx * cw, cy0 = mapY + sy * ch;
@@ -247,18 +247,15 @@
         });
         if (BC.world.here === sx + ',' + sy) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(cx0 + 0.5, cy0 + 0.5, cw - 4, ch - 4); }
       }
-      yy = mapY + 3 * ch + 6;
+      yy = mapY + 3 * ch + 4;
 
       const items = g.itemList();
       row('Items', items.length ? items.map(prettyItem).join(', ') : '(none)', '#cfe');
-      BC.text(ctx, 'Enter/M to close', W / 2, y + h - 14, { color: '#778', size: 8, align: 'center' });
+      BC.text(ctx, 'M / Esc to close', W / 2, y + h - 14, { color: '#778', size: 8, align: 'center' });
     }
   };
 
-  function prettyItem(id) {
-    const N = { bike: 'Bike', opener: 'Bottle Opener', map: 'Town Map' };
-    return N[id] || id;
-  }
+  function prettyItem(id) { return BC.game.itemName(id); }
 
   BC.ui = ui;
 })();

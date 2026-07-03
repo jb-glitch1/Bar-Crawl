@@ -38,6 +38,9 @@
 
   function scheduler() {
     if (!ctx || muted) return;
+    // after a background-tab stall (throttled interval) or an unmute, skip the
+    // backlog instead of scheduling every missed note at once
+    if (nextTime < ctx.currentTime) nextTime = ctx.currentTime;
     const drag = 1 + (tipsy / 100) * 0.18; // drunk = draggy tempo
     while (nextTime < ctx.currentTime + 0.13) {
       playStep(step, nextTime);

@@ -21,6 +21,7 @@
       this.qs = shuffle(POOL).slice(0, 5);
       this.i = 0; this.sel = 0; this.right = 0;
       this.flash = 0; this.flashOk = false;
+      this.phase = null; this.pass = false; // scene object is reused; clear last game's result
     },
     update(dt) {
       if (this.done) return;

@@ -141,7 +141,7 @@
           opts.push('Leave it');
           BC.ui.choose("What'll it be?", opts, (i) => {
             if (i === 0) BC.startChallenge(type, id);
-            else if (!noBooze && i === 1) { g.drink(12); BC.ui.toast('*clink* another ' + drink.name + '.'); }
+            else if (!noBooze && i === 1) { g.drink(drink.amount); BC.ui.toast('*clink* another ' + drink.name + '.'); }
           });
         });
       } else {

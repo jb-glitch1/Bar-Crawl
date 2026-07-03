@@ -81,6 +81,16 @@
         lastDoor = null;
       }
 
+      // your blackout-dropped item, right where you left it
+      const dr = g.meta.dropped;
+      if (dr && dr.key === screenKey && ctx2 === dr.tx && cty2 === dr.ty) {
+        g.meta.dropped = null;
+        g.giveItem(dr.item); // giveItem saves, persisting the cleared drop too
+        BC.ui.toast('You found your ' + g.itemName(dr.item) + '! Right where you left it.', { good: true });
+        BC.audio && BC.audio.sfx('stamp');
+        if (BC.fx) BC.fx.stars(player.x, player.y - 8);
+      }
+
       const W = BC.W, H = BC.H;
       if (player.x > W) { startFlip('right', 1, 0, 6, player.y); }
       else if (player.x < 0) { startFlip('left', -1, 0, W - 6, player.y); }
@@ -106,6 +116,7 @@
         BC.world.draw(ctx, screen, 0, 0);
         drawBuildings(ctx, screen, 0, 0);
         drawProps(ctx, screen, 0, 0);
+        drawDropped(ctx);
         drawCars(ctx, screen, 0, 0);
         drawEntities(ctx, screen);
         drawSigns(ctx, screen, 0, 0);
@@ -238,6 +249,21 @@
         }
       }
     }
+  }
+
+  // the item you lost in a blackout, waiting on its tile (with a come-get-me blink)
+  function drawDropped(ctx) {
+    const dr = BC.game.meta.dropped;
+    if (!dr || dr.key !== screenKey) return;
+    const x = dr.tx * 16, y = dr.ty * 16;
+    BC.rect(ctx, x + 2, y + 12, 12, 2, 'rgba(0,0,0,0.25)');
+    if (dr.item === 'bike') BC.gfx.bike(ctx, x, y - 2, 'right');
+    else {
+      BC.rect(ctx, x + 4, y + 5, 8, 7, '#9a6a3a');   // a small parcel
+      BC.rect(ctx, x + 4, y + 8, 8, 1, '#6a4a26');
+      BC.rect(ctx, x + 7, y + 5, 2, 7, '#e8d27a');
+    }
+    if (((BC.now || 0) % 0.9) < 0.45) BC.text(ctx, '!', x + 13, y - 6, { color: '#ffe27a', size: 8 });
   }
 
   function drawSigns(ctx, scr, ox, oy) {

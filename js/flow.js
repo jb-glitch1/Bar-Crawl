@@ -20,17 +20,28 @@
     return g.itemList().filter(id => id !== 'map'); // map is knowledge-ish; keep it
   }
 
+  // somewhere in town = a real, walkable tile (never inside a building/water/door)
+  function dropSpot() {
+    const keys = Object.keys(BC.world.screens);
+    for (let i = 0; i < 80; i++) {
+      const key = U.choice(keys);
+      const scr = BC.world.screens[key];
+      const tx = U.randint(1, scr.w - 2), ty = U.randint(2, scr.h - 2);
+      const t = scr.tiles[ty * scr.w + tx];
+      if (!BC.world.SOLID.has(t) && t !== BC.world.T.DOOR) return { key, tx, ty };
+    }
+    return { key: BC.world.startKey, tx: 7, ty: 10 }; // center path: always walkable
+  }
+
   function dropSomething(g) {
     const opts = droppable(g);
     if (!opts.length) return;
     const item = U.choice(opts);
     g.takeItem(item);
-    // stash it on a random known screen
-    const keys = Object.keys(BC.world.screens);
-    const key = keys.length ? U.choice(keys) : BC.world.startKey;
-    g.meta.dropped = { item, key, tx: U.randint(2, 13), ty: U.randint(4, 12) };
+    const spot = dropSpot();
+    g.meta.dropped = { item, key: spot.key, tx: spot.tx, ty: spot.ty };
     g.save();
-    BC.ui.toast('You dropped your ' + item + ' somewhere out there...');
+    BC.ui.toast('You dropped your ' + g.itemName(item) + ' somewhere in ' + BC.world.screens[spot.key].name + '...');
   }
 
   BC.flow = {
