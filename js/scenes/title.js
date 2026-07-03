@@ -23,9 +23,12 @@
 
   function askAge() {
     BC.audio && BC.audio.ensure();
-    BC.ui.choose('Real quick — are you 21 or older?',
-      ['Yes', 'Obviously', '...also yes (legally distinct)'],
-      { cancelable: false }, () => startNight());
+    const loops = (BC.game && BC.game.meta) ? BC.game.meta.loops : 0;
+    const prompt = loops < 2 ? 'Real quick — are you 21 or older?'
+      : 'Are you 21 or older? (You said yes yesterday. And yesterday. And—)';
+    const opts = loops < 2 ? ['Yes', 'Obviously', '...also yes (legally distinct)']
+      : ['Yes', 'Still yes', 'You literally asked me yesterday'];
+    BC.ui.choose(prompt, opts, { cancelable: false }, () => startNight());
   }
 
   S.title = {
@@ -55,9 +58,13 @@
         if ((i % 2) === 0) BC.rect(ctx, i * 16 + 4, 120 - h + 4, 3, 3, '#caa15a');
       }
 
-      // logo
+      // logo (subtitle admits the loop as the loops pile up)
       BC.text(ctx, 'BAR-CRAWL', BC.W / 2, 138, { color: '#ffe27a', size: 28, align: 'center' });
-      BC.text(ctx, 'a night that never ends', BC.W / 2, 168, { color: '#9aa', size: 9, align: 'center' });
+      const loops = (BC.game && BC.game.meta) ? BC.game.meta.loops : 0;
+      const sub = loops <= 1 ? 'a night that never ends'
+        : loops < 8 ? 'a night that STILL never ends'
+        : 'night #' + (loops + 1) + '. hydrate.';
+      BC.text(ctx, sub, BC.W / 2, 168, { color: '#9aa', size: 9, align: 'center' });
 
       // little wandering player
       const px = 30 + ((t * 24) % (BC.W - 60));

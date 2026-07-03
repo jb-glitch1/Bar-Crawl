@@ -9,6 +9,27 @@
     choice(arr) { return arr[(Math.random() * arr.length) | 0]; },
     chance(p) { return Math.random() < p; },
 
+    // deterministic tipsy text-mangling (same input -> same output, no flicker)
+    drunkify(str, tier, salt) {
+      if (!tier || tier < 2 || !str) return str;
+      let h = 2166136261 >>> 0;
+      const s = str + '|' + (salt || 0);
+      for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+      const pick = (n) => { h = ((h * 1103515245 + 12345) & 0x7fffffff) >>> 0; return h % n; };
+      const chars = str.split('');
+      const letters = [];
+      for (let i = 0; i < chars.length; i++) if (/[a-z]/i.test(chars[i])) letters.push(i);
+      if (!letters.length) return str;
+      if (tier >= 2) { const i = letters[pick(letters.length)]; chars.splice(i, 0, chars[i]); } // douubled letter
+      if (tier >= 3) {
+        const i = letters[pick(letters.length)];
+        if (i + 1 < chars.length && /[a-z]/i.test(chars[i + 1])) {
+          const t = chars[i]; chars[i] = chars[i + 1]; chars[i + 1] = t; // adjacent swpa
+        }
+      }
+      return chars.join('');
+    },
+
     // minutes elapsed since 5:00 PM -> "11:42 PM"
     formatTime(minFrom5) {
       let total = 17 * 60 + Math.floor(minFrom5);

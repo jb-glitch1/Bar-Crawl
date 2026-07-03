@@ -76,9 +76,14 @@
       g.run.flags.barTheme = true;
       if (BC.audio) BC.audio.setMood(this.def.mood || 'mid');
 
-      if (!args.fromMinigame && this.def.intro && !g.run.flags['intro_' + this.id]) {
+      if (!args.fromMinigame && this.def.intro && !g.run.flags['intro_' + this.id] && !g.meta.mastered[this.id]) {
         g.run.flags['intro_' + this.id] = true;
         BC.ui.say(this.def.intro, { speaker: this.def.name });
+      } else if (!args.fromMinigame && g.meta.lastEnd && g.meta.lastEnd.reason === 'blackout' &&
+                 g.meta.lastEnd.barId === this.id && !g.run.flags['shame_' + this.id]) {
+        // the scene of last night's crime remembers you
+        g.run.flags['shame_' + this.id] = true;
+        BC.ui.say(['"Back again? Last night ended... let\'s say \'abruptly.\'"', '"We kept your tab open. Brave of us."'], { speaker: this.def.name });
       }
     },
 
@@ -109,6 +114,16 @@
       for (const n of this.npcs) { const d = Math.hypot(n.x - fx, n.y - fy); if (d < bd) { bd = d; best = n; } }
       if (best && bd < 26) { this.talk(best); return; }
 
+      // poke the furniture (it pokes back)
+      const ftx = Math.floor(fx / 16), fty = Math.floor(fy / 16);
+      for (const f of (this.furniture || [])) {
+        const sz = BC.furniture.size(f.type);
+        if (ftx >= f.tx && ftx < f.tx + sz[0] && fty >= f.ty && fty < f.ty + sz[1]) {
+          if (this.pokeFurniture(f)) return;
+          break;
+        }
+      }
+
       const ed = this.screen.exitDoor;
       if (ed) {
         const tx = Math.floor(fx / 16), ty = Math.floor(fy / 16);
@@ -116,8 +131,29 @@
       }
     },
 
+    pokeFurniture(f) {
+      const JUKE = ["'Total Eclipse of the Bar Tab'", "'Sweet Child O' Wine'", "'Livin' on a Prayer (and $6)'", "'Wonderwall.' Obviously."];
+      const M = {
+        jukebox: () => { BC.ui.toast('Now playing: ' + BC.util.choice(JUKE)); BC.audio && BC.audio.sfx('blip'); },
+        pooltable: () => BC.ui.toast('You line it up perfectly. The cue ball declines.'),
+        dartboard: () => BC.ui.toast('The board has seen things.'),
+        fireplace: () => BC.ui.toast('The fire crackles smugly.'),
+        xmastree: () => BC.ui.toast('It is July. The tree does not care.'),
+        tv: () => BC.ui.toast('Forty screens. Thirty-nine wrong games.'),
+        shelf: () => BC.ui.toast('Bottles you cannot afford, sorted by smugness.')
+      };
+      if (M[f.type]) { M[f.type](); return true; }
+      return false;
+    },
+
     talk(n) {
       switch (n.role) {
+        case 'cat':
+          BC.ui.toast('You pet ' + n.name + '. The bar falls silent in respect.', { good: true });
+          BC.audio && BC.audio.sfx('confirm');
+          if (BC.fx) BC.fx.hearts(n.x, n.y - 8, 3);
+          if (n.lines) BC.ui.say(n.lines, { speaker: n.name });
+          return;
         case 'challenge': return this.talkChallenge(n);
         case 'password_giver': return this.talkPassword(n);
         case 'ingredient': return this.talkIngredient(n);
@@ -195,7 +231,12 @@
 
     talkDeja(n) {
       const g = BC.game;
-      if (g.hasStamp('deja_brew')) { BC.ui.say(['"Back again. Of course you are. Time\'s a circle, friend."'], { speaker: n.name }); return; }
+      if (g.hasStamp('deja_brew')) {
+        BC.ui.say(g.meta.tab >= 21
+          ? ['"Back again. Of course you are."', '"Tab\'s at $' + g.meta.tab + ', by the way. We both know money stopped mattering."']
+          : ['"Back again. Of course you are. Time\'s a circle, friend."'], { speaker: n.name });
+        return;
+      }
       BC.ui.say(['*the bartender studies you*', '"...You again. The 5-PM-to-2-AM one. The looper."', '"This is loop number ' + g.meta.loops + ' for you. Give or take."'], { speaker: n.name }, () => {
         BC.ui.choose('"Quick — do you remember how this night ends?"', ['"...No idea."', '"Every single time."', '"Wait — you KNOW?"'], () => {
           g.earnStamp('deja_brew');

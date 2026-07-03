@@ -10,6 +10,14 @@
     'You regain consciousness at the bus shelter. The bus left hours ago.',
     'You blink awake in a kiddie pool two blocks from anywhere.'
   ];
+  // repeat offenders unlock premium wake-ups
+  function wakeLine(g) {
+    const pool = WAKE.slice();
+    if (g.meta.blackouts >= 2) pool.push('You wake up holding a trophy. It reads: WORLD\'S OKAYEST.');
+    if (g.meta.blackouts >= 3) pool.push('You come to. Scout is guarding you. Good girl, Scout.');
+    if (g.meta.blackouts >= 4) pool.push('You wake up tucked under newspaper. The raccoon wants no thanks.');
+    return U.choice(pool);
+  }
   const LOOP = [
     'Morning. 5:00 PM again, somehow. The night resets — but you remember.',
     'You wake at home. The clock says 5:00 PM. You know things now.',
@@ -58,7 +66,7 @@
       } else if (reason === 'blackout') {
         steps.push({ text: ['Everything goes... sideways.', 'You black out.'] });
         steps.push({ do: () => dropSomething(g) });
-        steps.push({ text: [U.choice(WAKE)] });
+        steps.push({ text: [wakeLine(g)] });
       }
 
       if (won) {

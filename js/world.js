@@ -304,7 +304,12 @@
     const X = (u, d, l, r) => ({ up: u, down: d, left: l, right: r });
 
     makeScreen(S, '0,0', 'Maple Street', { exits: X(0, 1, 0, 1), spawn: [4, 11], buildings: [{ quad: 'TL', id: 'tipsy_newt' }, { quad: 'TR', id: 'home' }], trees: [[2, 12], [13, 12]], actors: [
-      { x: 168, y: 198, type: 'person', colors: { shirt: '#2a6ad0' }, name: 'Neighbor', lines: ['Big night ahead? The bars close at 2 AM sharp.', 'Pace yourself. ...Or don\'t. Not my business.'] },
+      { x: 168, y: 198, type: 'person', colors: { shirt: '#2a6ad0' }, name: 'Neighbor', lines: (g) => g.loopPick([
+        [0, ['Big night ahead? The bars close at 2 AM sharp.', 'Pace yourself. ...Or don\'t. Not my business.']],
+        [3, ['Big night ahead? The bars close at— hm.', 'Weird. Crushing sense of reruns.']],
+        [7, ['You know the drill. I know you know.', 'I don\'t know HOW I know.']],
+        [12, ['I\'ve started leaving the porch light on for you.']]
+      ]) },
       { x: 96, y: 206, type: 'dog', colors: { body: '#caa06a' }, name: 'Biscuit' }
     ] });
     makeScreen(S, '1,0', 'Downtown', { exits: X(0, 1, 1, 1), buildings: [{ quad: 'TL', id: 'hail_mary' }, { quad: 'TR', id: 'store' }], actors: [
@@ -334,7 +339,11 @@
       { x: 64, y: 200, type: 'cat', colors: { body: '#d08a30', dark: '#a06820' }, name: 'Alley Cat', lines: ['The cat regards you as a peasant. A peasant it has, for now, permitted.'] }
     ] });
     makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
-      { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.'] },
+      { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: (g) => g.loopPick([
+        [0, ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.']],
+        [5, ['You\'re getting that look. The loop look.', 'Wear sunscreen. Time is a lazy river.']],
+        [10, ['Loop number ' + g.meta.loops + '. You wear it well.', '...Loops, man.']]
+      ]) },
       { x: 110, y: 56, type: 'dog', colors: { body: '#8a8a8a' }, name: 'Echo' },
       { x: 60, y: 198, type: 'dog', colors: { body: '#777', dark: '#3a3a3a' }, name: 'Raccoon', gig: 'raccoon' }
     ] });

@@ -195,9 +195,13 @@
       BC.panel(ctx, x, y, w, h);
       choice.lines.forEach((ln, i) => BC.text(ctx, ln, x + 8, y + 6 + i * 11, { color: '#eef', size: 9 }));
       const oy = y + 8 + choice.lines.length * 11;
+      const tier = (BC.game && BC.game.run) ? BC.game.tipsyTier() : 0;
       choice.options.forEach((o, i) => {
         const on = i === choice.sel;
-        BC.text(ctx, (on ? '> ' : '  ') + o, x + 12, oy + i * 13, { color: on ? '#ffe27a' : '#bcd', size: 9 });
+        // your own menu options betray you when you're drunk
+        let label = BC.util.drunkify(o, tier, i);
+        if (tier >= 3 && on && o.length < 22) label += ' (you got this)';
+        BC.text(ctx, (on ? '> ' : '  ') + label, x + 12, oy + i * 13, { color: on ? '#ffe27a' : '#bcd', size: 9 });
       });
     },
 

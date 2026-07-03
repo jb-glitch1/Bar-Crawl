@@ -34,6 +34,10 @@
       loops: 0,
       wins: 0,
       bestStamps: 0,
+      blackouts: 0,    // lifetime blackout count — the town remembers
+      lastEnd: null,   // { reason, barId } — how the previous night died
+      tab: 0,          // the Deja Brew tab, in dollars, across all loops
+      mastered: {},    // bars stamped in ANY loop ("regular" status)
       highscores: {},  // per-bar best scores (persist across loops)
       seenIntro: false
     };
@@ -111,6 +115,7 @@
     // ---- tipsiness ----
     drink(v) {
       if (!this.run || this.run.ended) return;
+      this.meta.tab += 7; // it all goes on the tab. the tab is eternal.
       this.run.tipsy = U.clamp(this.run.tipsy + v, 0, 100);
       if (BC.audio) BC.audio.sfx('drink');
       if (BC.fx) BC.fx.bubbles();
@@ -141,11 +146,21 @@
       // battery is ALWAYS insultingly low
       this.run.scooterPct = U.randint(7, 27);
       this.run.battery = this.run.scooterPct;
+      this.run.flags.scoot15 = this.run.flags.scoot5 = false;
     },
     drainScooter(dt, moving) {
       if (this.run.vehicle !== 'scooter') return;
       if (moving) this.run.battery -= dt * 1.7; // drops embarrassingly fast
       this.run.scooterPct = Math.max(0, Math.ceil(this.run.battery));
+      // the SCOOT app keeps you emotionally informed
+      if (this.run.battery > 0 && this.run.scooterPct <= 15 && !this.run.flags.scoot15) {
+        this.run.flags.scoot15 = true;
+        BC.ui && BC.ui.toast("SCOOT: Battery low. Have you considered walking? We haven't.", { robot: true });
+      }
+      if (this.run.battery > 0 && this.run.scooterPct <= 5 && !this.run.flags.scoot5) {
+        this.run.flags.scoot5 = true;
+        BC.ui && BC.ui.toast('SCOOT: Please rate your experience while you still can.', { robot: true });
+      }
       if (this.run.battery <= 0) {
         this.run.vehicle = 'walk';
         this.run.battery = 0; this.run.scooterPct = 0;
@@ -182,7 +197,9 @@
       this.run.stamps[id] = true;
       const n = this.stampCount();
       if (n > this.meta.bestStamps) { this.meta.bestStamps = n; this.save(); }
+      this.meta.mastered[id] = true; // "regular" status persists across loops
       BC.ui && BC.ui.toast('* STAMP EARNED: ' + this.stampName(id) + ' *', { good: true });
+      if (STAMP_FLAVOR[id] && BC.ui) BC.ui.toast(STAMP_FLAVOR[id], { dur: 3.4 });
       BC.audio && BC.audio.sfx('stamp');
       if (BC.fx) { BC.fx.stars(); BC.fx.shake(2, 0.3); }
     },
@@ -203,8 +220,22 @@
       if (!this.run || this.run.ended) return;
       this.run.ended = true;
       this.run.endReason = reason;
+      // remember how the night died — NPCs and headlines bring it up tomorrow
+      this.meta.lastEnd = {
+        reason,
+        barId: (reason === 'blackout' && BC.sceneName === 'bar' && BC.scene && BC.scene.id) ? BC.scene.id : null
+      };
+      if (reason === 'blackout') this.meta.blackouts++;
+      this.save();
       const won = reason === 'complete' || (reason === 'lastcall' && this.allStamps());
       if (BC.flow) BC.flow.endNight(reason, won);
+    },
+
+    // pick flavor text by loop count: [[minLoops, value], ...] — highest match wins
+    loopPick(list) {
+      let v = list[0][1];
+      for (const e of list) if (this.meta.loops >= e[0]) v = e[1];
+      return v;
     }
   };
 
@@ -218,6 +249,23 @@
 
   const ITEM_NAMES = { bike: 'Bike', opener: 'Bottle Opener', map: 'Town Map' };
   game.ITEM_NAMES = ITEM_NAMES;
+
+  // one deadpan line per stamp, toasted right after the earn
+  const STAMP_FLAVOR = {
+    tipsy_newt: 'The stamp is a tiny newt. His name is also Pat.',
+    hail_mary: 'The stamp does a tiny wave. The crowd goes mild.',
+    off_key_west: 'Stamped in glitter. It will outlive you.',
+    pour_decisions: 'The stamp has notes of oak and judgment.',
+    sticky_floor: 'The stamp is... sticky. Of course it is.',
+    speakeasy: 'Reggie stamps it twice. "One\'s for the fridge."',
+    witz_end: 'Stamped, notarized, emotionally devastating.',
+    cellar_door: 'The stamp smells like victory and yeast.',
+    sleigh: 'The stamp smells like peppermint and regret.',
+    sobering_thoughts: 'The stamp is a little burrito at peace.',
+    deja_brew: 'It was somehow already stamped. Don\'t dwell.',
+    cocktail: 'The stamp is a tiny umbrella. Obviously.'
+  };
+  game.STAMP_FLAVOR = STAMP_FLAVOR;
 
   BC.game = game;
   // player movement reads this

@@ -169,21 +169,23 @@
 
   function talkActor(a) {
     if (a.gig && BC.gigs && BC.gigs[a.gig]) { BC.gigs[a.gig](BC.game, a); return; }
+    // lines may be a function of game state (loop-aware dialogue)
+    const lines = (typeof a.lines === 'function') ? a.lines(BC.game) : a.lines;
     if (a.type === 'dog') {
       BC.ui.toast('You pet ' + (a.name || 'the dog') + '. Good dog!', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
-      if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
+      if (lines) BC.ui.say(lines, { speaker: a.name });
     } else if (a.type === 'cat') {
       BC.ui.toast('You pet ' + (a.name || 'the cat') + '. It tolerates this. Briefly.', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8, 2);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
-      if (a.lines) BC.ui.say(a.lines, { speaker: a.name });
+      if (lines) BC.ui.say(lines, { speaker: a.name });
     } else {
-      BC.ui.say(a.lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
+      BC.ui.say(lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
     }
   }
 

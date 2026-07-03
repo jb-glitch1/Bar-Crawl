@@ -27,6 +27,18 @@
 
   BC.enterHomeFrom = () => { /* re-entering from town does nothing special */ };
 
+  // this morning's paper covers last night's chaos
+  function headline(g) {
+    const le = g.meta.lastEnd;
+    if (!le) return null;
+    if (le.reason === 'blackout' && le.barId) {
+      return 'THE MORNING POST: "LOCAL LEGEND CARRIED OUT OF ' + g.stampName(le.barId).toUpperCase() + ', HEROICALLY"';
+    }
+    if (le.reason === 'blackout') return 'THE MORNING POST: "AREA PERSON NAPS OUTDOORS; RACCOON DECLINES COMMENT"';
+    if (le.reason === 'lastcall') return 'THE MORNING POST: "BARS CLOSE AT 2 AM AGAIN; EVERYONE SOMEHOW SURPRISED"';
+    return null;
+  }
+
   S.home = {
     enter(args) {
       const g = BC.game;
@@ -56,7 +68,10 @@
             'They say the night you finish the WHOLE card is the one that finally sticks. Menu (M) = map + card. Out you go!'
           ], { speaker: 'Tonight' });
         } else {
-          BC.ui.say(['5:00 PM again. You remember the route. Sharper this time.'], { speaker: 'Home' });
+          const hl = headline(g);
+          const pages = hl ? [hl, '5:00 PM again. You remember the route. Sharper this time.']
+            : ['5:00 PM again. You remember the route. Sharper this time.'];
+          BC.ui.say(pages, { speaker: hl ? 'The Morning Post' : 'Home' });
         }
       }
     },

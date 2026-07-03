@@ -46,7 +46,7 @@
           repeat: ['You again! The shift’s yours anytime, legend.', 'Pat slides you a free pretzel. The highest honor here.'] },
         { x: 56, y: 120, dir: 'right', name: 'Old Regular', colors: { shirt: '#8a5a3a' }, role: 'flavor',
           lines: ['I’ve come here since before it was cool.', '...It was never cool.'] },
-        { x: 198, y: 132, dir: 'left', name: 'Newt the Cat', colors: { shirt: '#888', hair: '#999' }, role: 'flavor',
+        { x: 198, y: 132, dir: 'left', name: 'Newt the Cat', colors: { shirt: '#888', hair: '#999' }, role: 'cat',
           lines: ['The bar cat blinks at you slowly. High praise, apparently.'] }
       ]
     },
