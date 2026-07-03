@@ -38,7 +38,7 @@
   BC.bars = {
     // ---- Tier 1: normal ---------------------------------------------------
     tipsy_newt: {
-      name: 'The Tipsy Newt', room: INTERIOR, mood: M.cozy, door: { key: '0,0', tx: 3, ty: 2 },
+      name: 'The Tipsy Newt', room: INTERIOR, mood: M.cozy, door: { key: '0,0', tx: 3, ty: 4 },
       intro: ['The Tipsy Newt. Low light, spilled cider, jokes older than you are.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Pat', colors: { shirt: '#3a7d5a', hair: '#caa' }, role: 'challenge', challenge: 'memory',
@@ -52,7 +52,7 @@
     },
 
     hail_mary: {
-      name: 'The Hail Mary', room: INTERIOR, mood: M.sports, door: { key: '1,0', tx: 3, ty: 2 },
+      name: 'The Hail Mary', room: INTERIOR, mood: M.sports, door: { key: '1,0', tx: 3, ty: 4 },
       intro: ['The Hail Mary. Forty screens, thirty-nine showing a game you don’t care about.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Trivia Host', colors: { shirt: '#c4423a' }, role: 'challenge', challenge: 'trivia',
@@ -64,7 +64,7 @@
     },
 
     off_key_west: {
-      name: 'Off-Key West', room: INTERIOR, mood: M.karaoke, door: { key: '2,0', tx: 3, ty: 2 },
+      name: 'Off-Key West', room: INTERIOR, mood: M.karaoke, door: { key: '2,0', tx: 3, ty: 4 },
       intro: ['Off-Key West. Tropical shirts, zero pitch, infinite confidence.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'The KJ', colors: { shirt: '#1aa3a3', hair: '#eee' }, role: 'challenge', challenge: 'rhythm',
@@ -76,7 +76,7 @@
     },
 
     sticky_floor: {
-      name: 'The Sticky Floor', room: INTERIOR, mood: M.dive, door: { key: '1,1', tx: 3, ty: 2 },
+      name: 'The Sticky Floor', room: INTERIOR, mood: M.dive, door: { key: '1,1', tx: 3, ty: 4 },
       intro: ['The Sticky Floor. That’s the name. It’s on the sign. The sign is also sticky.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Darts Shark', colors: { shirt: '#555', hair: '#321' }, role: 'challenge', challenge: 'aim',
@@ -89,7 +89,7 @@
 
     // ---- Tier 2: weird ----------------------------------------------------
     pour_decisions: {
-      name: 'Pour Decisions', room: INTERIOR, mood: M.wine, door: { key: '2,0', tx: 12, ty: 2 },
+      name: 'Pour Decisions', room: INTERIOR, mood: M.wine, door: { key: '2,0', tx: 12, ty: 4 },
       intro: ['Pour Decisions. Candlelit, smug, and judging your shoes.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Sommelier', colors: { shirt: '#5a2030', hair: '#222' }, role: 'challenge', challenge: 'tasting',
@@ -101,7 +101,7 @@
     },
 
     cellar_door: {
-      name: 'The Cellar Door', room: INTERIOR, mood: M.dungeon, door: { key: '1,1', tx: 12, ty: 2 },
+      name: 'The Cellar Door', room: INTERIOR, mood: M.dungeon, door: { key: '1,1', tx: 12, ty: 4 },
       intro: ['The Cellar Door. A craft-beer cave. The good stuff is... downstairs.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Cellar Keeper', colors: { shirt: '#4a3a2a', hair: '#322' }, role: 'challenge', challenge: 'dungeon',
@@ -112,7 +112,7 @@
 
     // Reggie's — entered only via the gated storefront in Backstreets
     speakeasy: {
-      name: "Reggie's", room: INTERIOR, mood: M.speak, door: { key: '2,1', tx: 12, ty: 2 },
+      name: "Reggie's", room: INTERIOR, mood: M.speak, door: { key: '2,1', tx: 12, ty: 4 },
       intro: ['Behind the fridge: velvet, candlelight, and zero refrigerators. You’re IN.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Reggie', colors: { shirt: '#222', hair: '#111' }, role: 'speakeasy',
@@ -125,7 +125,7 @@
 
     // ---- Tier 3: bespoke-strange -----------------------------------------
     witz_end: {
-      name: 'Witz End', room: INTERIOR, mood: M.wits, door: { key: '2,1', tx: 3, ty: 2 },
+      name: 'Witz End', room: INTERIOR, mood: M.wits, door: { key: '2,1', tx: 3, ty: 4 },
       intro: ['Witz End. Where arguments go to become legend. Or to die.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'Reginald III', colors: { shirt: '#3a3a7a', hair: '#a88' }, role: 'challenge', challenge: 'wits',
@@ -137,7 +137,7 @@
     },
 
     deja_brew: {
-      name: 'Deja Brew', room: INTERIOR, mood: M.deja, door: { key: '2,2', tx: 3, ty: 2 },
+      name: 'Deja Brew', room: INTERIOR, mood: M.deja, door: { key: '2,2', tx: 3, ty: 4 },
       intro: ['Deja Brew. You feel like you’ve been here before. You have. Many times.'],
       npcs: [
         { x: 120, y: 56, dir: 'down', name: 'The Bartender', colors: { shirt: '#33384a', hair: '#556' }, role: 'deja' },
@@ -146,7 +146,7 @@
     },
 
     sleigh: {
-      name: "Sleigh It Ain't So", room: INTERIOR, mood: M.xmas, door: { key: '0,2', tx: 3, ty: 2 },
+      name: "Sleigh It Ain't So", room: INTERIOR, mood: M.xmas, door: { key: '0,2', tx: 3, ty: 4 },
       intro: ['SLEIGH IT AIN’T SO. It is 90 degrees out. Inside: fake snow, real sweat, a heater running next to the AC.'],
       npcs: [
         { x: 150, y: 56, dir: 'down', name: 'Sweaty Santa', colors: { shirt: '#b23', hair: '#eee' }, role: 'flavor',
@@ -158,7 +158,7 @@
     },
 
     sobering_thoughts: {
-      name: 'Sobering Thoughts', room: INTERIOR, mood: M.diner, door: { key: '1,2', tx: 3, ty: 2 },
+      name: 'Sobering Thoughts', room: INTERIOR, mood: M.diner, door: { key: '1,2', tx: 3, ty: 4 },
       intro: ['Sobering Thoughts — 24-hr diner. Grease so honest it could testify.'],
       drinkOnWin: 0,
       onStamp: (g) => { g.eat(40); BC.ui.toast('The grease soaks up the night. (much less tipsy)'); },

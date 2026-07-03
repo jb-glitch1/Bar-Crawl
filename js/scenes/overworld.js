@@ -26,6 +26,7 @@
         player.x = args.px; player.y = args.py;
         player.dir = args.dir || 'down';
       }
+      placeSafe(screen, player); // never spawn embedded in a wall
       trans = null; lastDoor = null;
     },
 
@@ -107,10 +108,15 @@
         else if (trans.dir === 'left') { fx = W * e; tx = -W + W * e; }
         else if (trans.dir === 'down') { fy = -H * e; ty = H - H * e; }
         else if (trans.dir === 'up') { fy = H * e; ty = -H + H * e; }
-        BC.world.draw(ctx, BC.world.screens[trans.fromKey], fx, fy);
-        drawBuildings(ctx, BC.world.screens[trans.fromKey], fx, fy);
-        BC.world.draw(ctx, BC.world.screens[trans.toKey], tx, ty);
-        drawBuildings(ctx, BC.world.screens[trans.toKey], tx, ty);
+        const sf = BC.world.screens[trans.fromKey], st = BC.world.screens[trans.toKey];
+        BC.world.draw(ctx, sf, fx, fy);
+        drawBuildings(ctx, sf, fx, fy);
+        drawProps(ctx, sf, fx, fy);
+        drawSigns(ctx, sf, fx, fy);
+        BC.world.draw(ctx, st, tx, ty);
+        drawBuildings(ctx, st, tx, ty);
+        drawProps(ctx, st, tx, ty);
+        drawSigns(ctx, st, tx, ty);
         drawRider(ctx, trans.px - 8 + tx, trans.py - 16 + ty, player.dir, 0);
       } else {
         BC.world.draw(ctx, screen, 0, 0);

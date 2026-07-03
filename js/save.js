@@ -2,7 +2,9 @@
 (function () {
   const BC = window.BC || (window.BC = {});
   const KEY = 'barcrawl.save.v1';
-  const has = (typeof localStorage !== 'undefined');
+  // even the localStorage PROBE can throw under blocked-storage browser configs
+  let has = false;
+  try { has = (typeof localStorage !== 'undefined' && localStorage !== null); } catch (e) { has = false; }
 
   BC.save = {
     load() {
