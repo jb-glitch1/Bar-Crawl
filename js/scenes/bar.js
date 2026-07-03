@@ -19,7 +19,11 @@
     const g = BC.game, def = BC.bars[barId];
     if (score != null) {
       const isPB = g.setHighScore(barId, score);
-      if (isPB && g.hasStamp(barId)) BC.ui.toast('New high score: ' + score + '!', { good: true });
+      if (isPB && g.hasStamp(barId)) {
+        g.run.cash += 5; // personal bests pay out
+        BC.ui.toast('New high score: ' + score + '!  (+$5)', { good: true });
+        if (BC.fx) BC.fx.coins();
+      }
     }
     if (success) {
       g.earnStamp(barId);
@@ -170,6 +174,11 @@
       const g = BC.game, id = this.id, type = n.challenge, bar = BC.bars[id];
       const noBooze = bar.drinkOnWin === 0;
       const drink = bar.drink || { name: 'a drink', amount: 12 };
+      // some challenges keep hours — routing is the puzzle
+      if (bar.opensAt && g.run.minutes < bar.opensAt) {
+        BC.ui.say(bar.hoursMsg || ['"We start later. Come back."'], { speaker: n.name });
+        return;
+      }
       if (g.hasStamp(id)) {
         BC.ui.say(n.repeat || ['Good to see you again.'], { speaker: n.name }, () => {
           const opts = ['Play again  (best: ' + g.highScore(id) + ')'];
@@ -181,14 +190,26 @@
           });
         });
       } else {
-        // ordering a drink is part of taking on the bar
-        BC.ui.say(n.greet || ['Ready?'], { speaker: n.name }, () => {
-          const prompt = noBooze ? 'Take it on?' : 'Order ' + drink.name + ' and take it on?';
-          BC.ui.choose(prompt, [noBooze ? "Let's go" : 'Order & play', 'Maybe later'], (i) => {
-            if (i !== 0) return;
-            if (!noBooze) { g.drink(drink.amount); BC.ui.toast('You order ' + drink.name + '.'); if (g.run.ended) return; }
-            BC.startChallenge(type, id);
-          });
+        // regulars skip the pitch; ordering a drink is part of taking on the bar
+        const greet = g.meta.mastered[id] ? ['"The usual?"'] : (n.greet || ['Ready?']);
+        BC.ui.say(greet, { speaker: n.name }, () => {
+          if (noBooze) {
+            BC.ui.choose('Take it on?', ["Let's go", 'Maybe later'], (i) => {
+              if (i === 0) BC.startChallenge(type, id);
+            });
+            return;
+          }
+          // pick your pour: manage the meter (floor for secrets, ceiling for blackout)
+          const happy = bar.happyHourUntil && g.run.minutes < bar.happyHourUntil;
+          BC.ui.choose('Order ' + drink.name + '?' + (happy ? '  (HAPPY HOUR)' : ''),
+            ['Easy pour', 'Regular pour', 'Make it STRONG', 'Maybe later'], (i) => {
+              if (i < 0 || i === 3) return;
+              const amt = [drink.amount - 5, drink.amount, drink.amount + 5][i] - (happy ? 4 : 0);
+              g.drink(Math.max(4, amt));
+              BC.ui.toast('You order ' + drink.name + '.' + (happy ? ' Gentle happy-hour pour.' : ''));
+              if (g.run.ended) return;
+              BC.startChallenge(type, id);
+            });
         });
       }
     },

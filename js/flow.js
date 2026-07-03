@@ -53,6 +53,16 @@
   }
 
   BC.flow = {
+    // casual mode: a blackout costs an hour, not the night
+    softBlackout(g) {
+      BC.ui.cutscene([
+        { fadeOut: 1, dur: 0.6, color: '#000' },
+        { text: ['Everything goes sideways... briefly.', 'A kind stranger walks you home. You lose an hour. Casual mode is merciful.'] },
+        { do: () => { g.run.tipsy = 30; g.run.minutes = Math.min(g.nightLen() - 1, g.run.minutes + 60); BC.setScene('home', { skipIntro: true }); } },
+        { fadeIn: 0, dur: 0.6 }
+      ]);
+    },
+
     endNight(reason, won) {
       const g = BC.game;
       if (reason === 'blackout' && BC.fx) BC.fx.shake(4, 0.7);

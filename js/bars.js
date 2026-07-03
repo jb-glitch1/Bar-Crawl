@@ -223,4 +223,12 @@
     if (DRINKS[id]) BC.bars[id].drink = DRINKS[id];
     if (TAGS[id]) BC.bars[id].tag = TAGS[id];
   });
+
+  // ---- opening hours + happy hour (the routing layer) --------------------
+  // minutes are from 5 PM: 120 = 7 PM, 180 = 8 PM, 240 = 9 PM, 420 = midnight
+  BC.bars.tipsy_newt.happyHourUntil = 120;
+  BC.bars.hail_mary.opensAt = 180;
+  BC.bars.hail_mary.hoursMsg = ['"Trivia\'s at EIGHT, champ. Doors at eight. Energy: also eight."'];
+  BC.bars.sobering_thoughts.opensAt = 420;
+  BC.bars.sobering_thoughts.hoursMsg = ['"The Everything Burrito is a MIDNIGHT special. House rules."', '"The burrito sleeps till 12. Respect that."'];
 })();

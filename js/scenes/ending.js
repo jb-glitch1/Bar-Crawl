@@ -45,6 +45,9 @@
       // the player, watching it, facing the sun — Scout watches too
       BC.gfx.actor(ctx, sunX - 8, horizon - 16, 'up', 0, { shirt: '#c0444f', hair: '#2f2218' });
       BC.gfx.dog(ctx, sunX - 30, horizon - 16, 'right', 0, { body: '#caa05a', dark: '#9a7838' });
+      if (g.run && g.run.flags && g.run.flags.goodPerson) {
+        BC.text(ctx, '* CERTIFIED GOOD PERSON *', W / 2, horizon + 6, { color: '#ffd1e0', size: 8, align: 'center' });
+      }
 
       // words
       BC.rect(ctx, 0, horizon + 18, W, 68, 'rgba(8,8,18,0.55)');

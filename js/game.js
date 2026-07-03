@@ -38,6 +38,7 @@
       lastEnd: null,   // { reason, barId } — how the previous night died
       tab: 0,          // the Deja Brew tab, in dollars, across all loops
       mastered: {},    // bars stamped in ANY loop ("regular" status)
+      mode: 'night',   // difficulty: 'casual' | 'night' | 'lastcall'
       highscores: {},  // per-bar best scores (persist across loops)
       seenIntro: false
     };
@@ -70,6 +71,7 @@
         scooterPct: 0,
         cash: 25,         // nightly budget (corner store energy drinks)
         energized: 0,     // seconds of caffeine speed boost
+        espresso: 0,      // game-minutes of slowed time remaining
         stamps: {},
         flags: {},        // per-run scratch (npc states, quest progress)
         ended: false,
@@ -80,10 +82,21 @@
       this.save();
     },
 
+    // night length varies by difficulty mode
+    nightLen() {
+      if (this.meta.mode === 'casual') return 630;    // ~10:30 hrs of night
+      if (this.meta.mode === 'lastcall') return 450;  // last call comes EARLY
+      return this.config.nightMinutes;
+    },
+
     // ---- time ----
     tick(dt) {
       if (this.paused || !this.run || this.run.ended) return;
-      const gmin = dt * this.config.timeScale;
+      let gmin = dt * this.config.timeScale;
+      if (this.run.espresso > 0) { // double espresso: time crawls, eye twitches
+        gmin *= 0.8;
+        this.run.espresso = Math.max(0, this.run.espresso - gmin);
+      }
       this.run.minutes += gmin;
       if (this.run.tipsy > 0) {
         this.run.tipsy = Math.max(0, this.run.tipsy - this.config.tipsyDecayPerGameMin * gmin);
@@ -93,11 +106,11 @@
       this._updateMood();
       if (BC.audio) BC.audio.update(this.run.tipsy);
       if (this.allStamps()) { this.endNight('complete'); return; }
-      if (this.run.minutes >= this.config.nightMinutes) this.endNight('lastcall');
+      if (this.run.minutes >= this.nightLen()) this.endNight('lastcall');
     },
 
     timeString() { return U.formatTime(this.run.minutes); },
-    minutesLeft() { return Math.max(0, this.config.nightMinutes - this.run.minutes); },
+    minutesLeft() { return Math.max(0, this.nightLen() - this.run.minutes); },
 
     _updateMood() {
       const m = this.run.minutes;
@@ -115,6 +128,7 @@
     // ---- tipsiness ----
     drink(v) {
       if (!this.run || this.run.ended) return;
+      if (this.meta.mode === 'lastcall') v += 3; // LAST CALL pours heavy
       this.meta.tab += 7; // it all goes on the tab. the tab is eternal.
       this.run.tipsy = U.clamp(this.run.tipsy + v, 0, 100);
       if (BC.audio) BC.audio.sfx('drink');
@@ -123,7 +137,11 @@
         this.run.flags.warnBlackout = true;
         BC.ui && BC.ui.toast('Careful — one more big one and you BLACK OUT. Grab food/water.', { good: false });
       }
-      if (this.run.tipsy >= this.config.blackoutAt) this.endNight('blackout');
+      if (this.run.tipsy >= this.config.blackoutAt) {
+        // casual mode is merciful: lose an hour, keep the night
+        if (this.meta.mode === 'casual' && BC.flow && BC.flow.softBlackout) BC.flow.softBlackout(this);
+        else this.endNight('blackout');
+      }
     },
     eat(v) {
       if (!this.run || this.run.ended) return;

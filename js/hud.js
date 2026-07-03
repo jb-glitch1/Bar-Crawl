@@ -38,7 +38,7 @@
     const cx = x + 9, cy = y + 8, r = 5;
     ctx.fillStyle = '#12121c'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#cfd2dd'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-    const frac = g.run.minutes / g.config.nightMinutes, a = -Math.PI / 2 + frac * Math.PI * 2;
+    const frac = g.run.minutes / g.nightLen(), a = -Math.PI / 2 + frac * Math.PI * 2;
     ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2)); ctx.stroke();
     BC.text(ctx, g.timeString(), x + 18, y + 2, { size: 8, color: '#dfe7ff' });

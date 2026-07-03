@@ -28,7 +28,21 @@
       : 'Are you 21 or older? (You said yes yesterday. And yesterday. And—)';
     const opts = loops < 2 ? ['Yes', 'Obviously', '...also yes (legally distinct)']
       : ['Yes', 'Still yes', 'You literally asked me yesterday'];
-    BC.ui.choose(prompt, opts, { cancelable: false }, () => startNight());
+    BC.ui.choose(prompt, opts, { cancelable: false }, () => askMode());
+  }
+
+  function askMode() {
+    const g = BC.game, cur = g.meta.mode || 'night';
+    const tag = (m) => (cur === m ? '  <' : '');
+    BC.ui.choose('How big a night are we talking?', [
+      'Casual stroll (long night, soft blackouts)' + tag('casual'),
+      'A night out (the classic)' + tag('night'),
+      'LAST CALL (short night, heavy pours)' + tag('lastcall')
+    ], { cancelable: false }, (i) => {
+      g.meta.mode = ['casual', 'night', 'lastcall'][i];
+      g.save();
+      startNight();
+    });
   }
 
   S.title = {
@@ -65,6 +79,10 @@
         : loops < 8 ? 'a night that STILL never ends'
         : 'night #' + (loops + 1) + '. hydrate.';
       BC.text(ctx, sub, BC.W / 2, 168, { color: '#9aa', size: 9, align: 'center' });
+      const meta = BC.game && BC.game.meta;
+      if (meta && meta.bestStamps > 0) {
+        BC.text(ctx, 'best night: ' + meta.bestStamps + '/12 stamps   -   wins: ' + meta.wins, BC.W / 2, 181, { color: '#6a7', size: 8, align: 'center' });
+      }
 
       // little wandering player
       const px = 30 + ((t * 24) % (BC.W - 60));

@@ -20,6 +20,7 @@
       screenKey = (args && args.key) || BC.world.startKey;
       screen = BC.world.screens[screenKey];
       BC.world.here = screenKey;
+      markVisited(screenKey);
       const sp = screen.spawn || { x: 128, y: 120 };
       player = BC.player = new BC.Player(sp.x, sp.y);
       if (args && args.px != null) {
@@ -37,6 +38,7 @@
           screenKey = trans.toKey;
           screen = BC.world.screens[screenKey];
           BC.world.here = screenKey;
+          markVisited(screenKey);
           player.x = trans.px; player.y = trans.py;
           placeSafe(screen, player);
           trans = null;
@@ -167,6 +169,30 @@
     if (t === BC.world.T.DOOR) BC.ui.toast("It's locked. (For now.)");
   }
 
+  // the cab needs to know where you've been tonight
+  function markVisited(key) {
+    const g = BC.game;
+    if (!g || !g.run) return;
+    g.run.flags.visited = g.run.flags.visited || {};
+    g.run.flags.visited[key] = true;
+  }
+
+  // pet every animal in one night -> GOOD PERSON (affects nothing; matters completely)
+  const ALL_PETS = ['Biscuit', 'Rex', 'Daisy', 'Scout', 'Echo', 'Alley Cat'];
+  function markPet(name) {
+    const g = BC.game, f = g.run.flags;
+    f.petted = f.petted || {};
+    if (f.petted[name]) return;
+    f.petted[name] = true;
+    const n = ALL_PETS.filter((p) => f.petted[p]).length;
+    if (n === ALL_PETS.length && !f.goodPerson) {
+      f.goodPerson = true;
+      BC.ui.toast('* GOOD PERSON: every animal petted tonight *', { good: true });
+      BC.audio && BC.audio.sfx('stamp');
+      if (BC.fx) BC.fx.hearts(player.x, player.y - 10, 8);
+    }
+  }
+
   function talkActor(a) {
     if (a.gig && BC.gigs && BC.gigs[a.gig]) { BC.gigs[a.gig](BC.game, a); return; }
     // lines may be a function of game state (loop-aware dialogue)
@@ -177,12 +203,14 @@
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
       if (a.leadTo) { a.hx = a.leadTo.x; a.hy = a.leadTo.y; } // Scout trots off toward the well
+      markPet(a.name);
       if (lines) BC.ui.say(lines, { speaker: a.name });
     } else if (a.type === 'cat') {
       BC.ui.toast('You pet ' + (a.name || 'the cat') + '. It tolerates this. Briefly.', { good: true });
       BC.audio && BC.audio.sfx('confirm');
       if (BC.fx) BC.fx.hearts(a.x, a.y - 8, 2);
       a.t = 0.3; a.mvx = 0; a.mvy = 0;
+      markPet(a.name);
       if (lines) BC.ui.say(lines, { speaker: a.name });
     } else {
       BC.ui.say(lines || ['Lovely night for it.'], { speaker: a.name || 'Townsperson' });
@@ -242,6 +270,12 @@
         BC.rect(ctx, x, y - 6, 16, 5, '#7a3030');                 // roof
         BC.rect(ctx, x, y - 6, 16, 1, '#9a4444');
         BC.rect(ctx, x + 6, y + 1, 4, 3, '#5a3a20');              // bucket
+      } else if (pr.type === 'cab') {
+        BC.rect(ctx, x + 5, y + 14, 8, 2, 'rgba(0,0,0,0.25)');  // shadow
+        BC.rect(ctx, x + 7, y + 4, 2, 11, '#8a8a92');            // pole
+        BC.rect(ctx, x + 1, y - 2, 14, 8, '#e8c22a');            // yellow sign
+        BC.rect(ctx, x + 1, y - 2, 14, 1, '#fff0a0');
+        BC.text(ctx, 'CAB', x + 8, y - 1, { size: 7, align: 'center', color: '#1a1a1a', shadow: false });
       } else if (pr.type === 'bike') {
         if (BC.game.hasItem('bike')) {
           BC.rect(ctx, x + 2, y + 10, 12, 2, '#556'); // empty rack
@@ -420,7 +454,7 @@
     }
   }
 
-  BC.overworld = { interactFront, frontTile, placeSafe };
+  BC.overworld = { interactFront, frontTile, placeSafe, markPet };
 
   function startFlip(dir, dx, dy, px, py) {
     const nk = neighbor(dx, dy);

@@ -234,6 +234,7 @@
     BC.ui.choose('CORNER STORE   (you have $' + g.run.cash + ')', [
       'Energy Drink - $4  (sober up + get wired)',
       'Bottled Water - $1  (a small sober-up)',
+      'Double Espresso - $3  (time feels slower)',
       'Leave'
     ], (i) => {
       if (i === 0) {
@@ -242,8 +243,34 @@
       } else if (i === 1) {
         if (g.run.cash >= 1) { g.run.cash -= 1; g.eat(10); BC.ui.toast('Hydration. Responsible of you.'); BC.audio && BC.audio.sfx('confirm'); }
         else BC.ui.toast('"That one\'s not free either, pal."');
+      } else if (i === 2) {
+        if (g.run.cash >= 3) { g.run.cash -= 3; g.run.espresso = 120; BC.ui.toast('The night stretches. Your left eye twitches.', { good: true }); BC.audio && BC.audio.sfx('confirm'); }
+        else BC.ui.toast('"Espresso runs on money, pal. Like me."');
       }
     });
+  }
+
+  // flat-rate cab between districts you've already visited tonight
+  const CABBIE = ['"In and out. I know every pothole personally."', '"That\'s $8 and one story I won\'t repeat."', '"Seatbelt. This town has ROUNDABOUTS."'];
+  function cabRide(g, hereKey) {
+    if (g.run.cash < 8) { BC.ui.toast('"Eight bucks, pal. The meter doesn\'t do IOUs."'); return; }
+    const visited = Object.keys(g.run.flags.visited || {}).filter(k => k !== hereKey);
+    if (!visited.length) { BC.ui.say(['"You\'ve only been HERE. Walk somewhere first, then we\'ll talk."'], { speaker: 'Cabbie' }); return; }
+    const names = visited.map(k => BC.world.screens[k].name);
+    BC.ui.choose('CAB - $8 flat. Where to?', names.concat(['Never mind']), (i) => {
+      if (i < 0 || i >= visited.length) return;
+      g.run.cash -= 8;
+      const key = visited[i];
+      BC.ui.cutscene([
+        { fadeOut: 1, dur: 0.3 },
+        { do: () => { BC.audio && BC.audio.sfx('confirm'); BC.setScene('overworld', { key, px: 7 * 16 + 8, py: 10 * 16 + 8, dir: 'down' }); BC.ui.toast(BC.util.choice(CABBIE)); } },
+        { fadeIn: 0, dur: 0.35 }
+      ]);
+    });
+  }
+  function addCab(s, key, tx, ty) {
+    s.meta.props.push({ tx, ty, type: 'cab' });
+    s.meta.interactions[tx + ',' + ty] = (g) => cabRide(g, key);
   }
 
   // Lassie side-gag: Scout leads you to the old well; you fish out a guy for cash.
@@ -265,6 +292,7 @@
   }
 
   function speakeasyGate(g, ret) {
+    if (g.run.minutes < 300) { BC.ui.toast('A note on the fridge shop: "Back at 10 PM. Even secrets keep hours."'); return; }
     if (g.tipsyTier() < 1) { BC.ui.toast('"Reggie\'s Reliable Refrigeration." Closed. Smells of freon and secrets.'); return; }
     if (!g.knows('password')) { BC.ui.say(['A slot slides open. "Password?"', '...you\'ve got nothing. Maybe somebody tipsy knows it.'], { speaker: 'The Slot' }); return; }
     BC.enterBar('speakeasy', ret);
@@ -338,6 +366,16 @@
     makeScreen(S, '1,2', 'Night Market', { exits: X(1, 0, 1, 1), buildings: [{ quad: 'TL', id: 'sobering_thoughts' }], actors: [
       { x: 64, y: 200, type: 'cat', colors: { body: '#d08a30', dark: '#a06820' }, name: 'Alley Cat', lines: ['The cat regards you as a peasant. A peasant it has, for now, permitted.'] }
     ] });
+    // scooters parked around town: terrible, glorious sprint tokens
+    addScooter(S['2,0'], 9, 11);
+    addScooter(S['2,1'], 6, 11);
+    addScooter(S['1,2'], 9, 11);
+    // cab stands (learn the spots; $8 flat to anywhere you've been tonight)
+    addCab(S['0,0'], '0,0', 2, 6);
+    addCab(S['1,0'], '1,0', 2, 6);
+    addCab(S['1,1'], '1,1', 2, 6);
+    addCab(S['1,2'], '1,2', 2, 6);
+
     makeScreen(S, '2,2', 'The Fringe', { exits: X(1, 0, 1, 0), buildings: [{ quad: 'TL', id: 'deja_brew' }], actors: [
       { x: 170, y: 200, type: 'person', colors: { shirt: '#6a2a7a', hair: '#211' }, name: '???', lines: (g) => g.loopPick([
         [0, ['Have we met? We\'ve met. We\'ll meet again.', '...Loops, man.']],

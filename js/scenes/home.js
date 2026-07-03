@@ -78,6 +78,27 @@
 
     update(dt) {
       this.player.update(dt, this.screen);
+
+      // nap on the bed: trade an hour for sobriety (Majora would approve)
+      if (BC.input.pressed('a')) {
+        const p = this.player;
+        let fx = p.x, fy = p.y - 2;
+        if (p.dir === 'left') fx -= 12; else if (p.dir === 'right') fx += 12;
+        else if (p.dir === 'up') fy -= 12; else fy += 8;
+        const tx = Math.floor(fx / 16), ty = Math.floor(fy / 16);
+        if (tx >= 1 && tx <= 2 && ty >= 1 && ty <= 3) {
+          const g = BC.game;
+          BC.ui.choose('Nap for an hour? The night will not wait.', ['Sleep it off (+1 hr, sober up)', 'Stay up'], (i) => {
+            if (i !== 0) return;
+            g.run.minutes = Math.min(g.nightLen() - 1, g.run.minutes + 60);
+            g.eat(14);
+            BC.ui.toast('You dream of punch cards. (' + g.timeString() + ')');
+            BC.audio && BC.audio.sfx('confirm');
+          });
+          return;
+        }
+      }
+
       const ed = this.screen.exitDoor;
       if (ed && Math.floor(this.player.x / 16) === ed.tx && Math.floor(this.player.y / 16) === ed.ty) {
         BC.ui.cutscene([

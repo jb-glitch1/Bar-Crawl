@@ -18,6 +18,9 @@
       for (let i = 0; i < 24; i++) { this.schedule.push({ t: tt, lane: (Math.random() * 4) | 0 }); tt += (0.5 + Math.random() * 0.22); }
       this.total = this.schedule.length;
       this.phase = 'play'; this.flash = [0, 0, 0, 0];
+      // after 9 PM the crowd shows up and carries you a little
+      this.crowd = BC.game && BC.game.run && BC.game.run.minutes >= 240;
+      if (this.crowd) BC.ui.toast('9 PM crowd. They are WITH you.', { good: true });
     },
     update(dt) {
       if (this.done) return;
@@ -45,7 +48,7 @@
         }
       }
       if (this.spawnIdx >= this.schedule.length && !this.notes.some(n => n.alive)) {
-        this.phase = 'done'; this.pass = (this.hits / this.total) >= 0.68;
+        this.phase = 'done'; this.pass = (this.hits / this.total) >= (this.crowd ? 0.62 : 0.68);
       }
     },
     finish(ok) { if (this.done) return; this.done = true; BC.afterMinigame(this.barId, ok, this.hits); },
